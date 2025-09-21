@@ -1,16 +1,74 @@
 plugins {
+    id 'org.springframework.boot'version '3.4.0' apply false
+    id 'io.spring.dependency-management' version '1.1.7' apply false
     id 'java'
     id 'com.diffplug.spotless' version '6.25.0'
     id 'checkstyle'
 }
 
-repositories {
-    mavenCentral()
+allprojects {
+    apply plugin: 'com.diffplug.spotless'
+    apply plugin: 'checkstyle'
+
+    group = 'com.fliqo'
+    version = '1.0.0'
+
+    repositories {
+        mavenCentral()
+    }
 }
+
+subprojects {
+
+    apply plugin: 'java'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(17)
+        }
+    }
+
+    configurations {
+        compileOnly {
+            extendsFrom annotationProcessor
+        }
+    }
+
+    dependencyManagement {
+        imports {
+            mavenBom "org.springframework.cloud:spring-cloud-dependencies:2024.0.0"
+        }
+    }
+
+    dependencies {
+        implementation 'org.springframework.boot:spring-boot-starter'
+        implementation 'org.springframework.boot:spring-boot-starter-validation'
+        implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+        compileOnly 'org.projectlombok:lombok'
+        annotationProcessor 'org.projectlombok:lombok'
+
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    }
+
+    tasks.named('bootJar') {
+        enabled = true
+        archiveClassifier = ''
+    }
+
+    tasks.named('jar') {
+        enabled = false
+    }
+}
+
+
+
 
 checkstyle {
     toolVersion = '10.17.0'
-    // 프로젝트 내 규칙 파일 경로
     configFile = file('config/checkstyle/checkstyle.xml')
 }
 
@@ -27,12 +85,4 @@ spotless {
 
 tasks.named('check') {
     dependsOn 'spotlessCheck', 'checkstyleMain', 'checkstyleTest'
-}
-
-group = 'org.example'
-version = '1.0.0'
-
-dependencies {
-    implementation project(':fliqo-common')
-    // Add other common dependencies here
 }
