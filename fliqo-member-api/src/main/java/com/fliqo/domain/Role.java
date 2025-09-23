@@ -1,5 +1,6 @@
 package com.fliqo.domain;
 
 public enum Role {
-    USER, OWNER
+    USER,
+    OWNER
 }

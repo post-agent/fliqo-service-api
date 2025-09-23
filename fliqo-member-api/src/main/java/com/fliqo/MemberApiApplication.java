@@ -9,4 +9,3 @@ public class MemberApiApplication {
         SpringApplication.run(MemberApiApplication.class, args);
     }
 }
-

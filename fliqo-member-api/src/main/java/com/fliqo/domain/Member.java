@@ -1,22 +1,21 @@
 package com.fliqo.domain;
 
+import java.time.LocalDateTime;
+import java.util.UUID;
+
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
-
 @Entity
 @Table(
         name = "tb_member",
         indexes = {
-                @Index(name = "ux_member_uuid", columnList = "member_uuid", unique = true),
-                @Index(name = "ux_member_email", columnList = "email", unique = true),
-                @Index(name = "ix_member_phone", columnList = "phone")
-        }
-)
+            @Index(name = "ux_member_uuid", columnList = "member_uuid", unique = true),
+            @Index(name = "ux_member_email", columnList = "email", unique = true),
+            @Index(name = "ix_member_phone", columnList = "phone")
+        })
 @Getter
 @Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -94,18 +93,47 @@ public class Member {
         if (this.locale == null) this.locale = "ko-KR";
     }
 
-    public void markEmailVerified() { this.emailVerified = true; }
-    public void markPhoneVerified() { this.phoneVerified = true; }
-    public void markLastLoginNow() { this.lastLoginAt = LocalDateTime.now(); }
+    public void markEmailVerified() {
+        this.emailVerified = true;
+    }
 
-    public void changeNickname(String nickname) { this.nickname = nickname; }
-    public void changeProfileImage(String url) { this.profileImageUrl = url; }
-    public void nextOnboardingStep() { this.onboardingStep++; }
+    public void markPhoneVerified() {
+        this.phoneVerified = true;
+    }
 
-    public boolean isOwner() { return this.role == Role.OWNER; }
-    public boolean isActive() { return this.status == MemberStatus.ACTIVE; }
+    public void markLastLoginNow() {
+        this.lastLoginAt = LocalDateTime.now();
+    }
 
-    public void suspend() { this.status = MemberStatus.SUSPENDED; }
-    public void deactivate() { this.status = MemberStatus.INACTIVE; }
-    public void activate() { this.status = MemberStatus.ACTIVE; }
+    public void changeNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public void changeProfileImage(String url) {
+        this.profileImageUrl = url;
+    }
+
+    public void nextOnboardingStep() {
+        this.onboardingStep++;
+    }
+
+    public boolean isOwner() {
+        return this.role == Role.OWNER;
+    }
+
+    public boolean isActive() {
+        return this.status == MemberStatus.ACTIVE;
+    }
+
+    public void suspend() {
+        this.status = MemberStatus.SUSPENDED;
+    }
+
+    public void deactivate() {
+        this.status = MemberStatus.INACTIVE;
+    }
+
+    public void activate() {
+        this.status = MemberStatus.ACTIVE;
+    }
 }
