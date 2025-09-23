@@ -25,7 +25,7 @@ public class MemberController {
         EmailCheckCommand cmd = new EmailCheckCommand(req.email().toLowerCase());
         EmailCheckResult result = memberService.checkEmail(cmd);
 
-        EmailCheckResponse resp = EmailCheckResponse.from(result.exists());
+        EmailCheckResponse resp = EmailCheckResponse.of(result.exists());
         return ResponseEntity.ok(ApiResponse.ok(resp));
     }
 }
