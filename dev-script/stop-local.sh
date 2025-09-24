@@ -7,8 +7,8 @@
 
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
-LOG_DIR="$ROOT_DIR/logs"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+LOG_DIR="$SCRIPT_DIR/logs"
 
 if ! ls "$LOG_DIR"/*.pid >/dev/null 2>&1; then
   echo "종료할 PID 파일이 없습니다. ($LOG_DIR/*.pid)"
@@ -22,9 +22,8 @@ for pid_file in "$LOG_DIR"/*.pid; do
 
   if [[ -n "${pid:-}" ]]; then
     echo "🔻 종료: ${module} (PID $pid)"
-    # 우선 정상 종료 시도
+    # 정상 종료 시도
     kill "$pid" >/dev/null 2>&1 || true
-    # 잠깐 대기 후 여전히 살아 있으면 강제 종료
     sleep 1
     if ps -p "$pid" >/dev/null 2>&1; then
       echo "   ↳ 강제 종료(SIGKILL)"
@@ -36,3 +35,4 @@ for pid_file in "$LOG_DIR"/*.pid; do
 done
 
 echo "모든 모듈 종료 완료"
+echo "💚 로그 디렉토리: $LOG_DIR"
