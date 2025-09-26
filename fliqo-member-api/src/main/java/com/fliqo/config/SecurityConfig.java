@@ -5,6 +5,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -18,7 +20,11 @@ public class SecurityConfig {
                                 auth // ← 발급 엔드포인트 열기
                                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**")
                                         .permitAll()
-                                        .requestMatchers(HttpMethod.POST, "/api/member/email-check")
+                                        .requestMatchers(
+                                                HttpMethod.POST,
+                                                "/api/member/email-check",
+                                                "/api/member/phone/**",
+                                                "/api/member/signup")
                                         .permitAll()
                                         .requestMatchers("/error")
                                         .permitAll()
@@ -30,5 +36,10 @@ public class SecurityConfig {
         // 만약 아래처럼 리소스서버를 쓰고 있으면 유지하세요.
         // http.oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
         return http.build();
+    }
+
+    @Bean
+    PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }
