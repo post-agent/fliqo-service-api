@@ -8,7 +8,6 @@ import com.fliqo.controller.dto.request.PhoneVerifyConfirmRequest;
 import com.fliqo.controller.dto.request.PhoneVerifyStartRequest;
 import com.fliqo.controller.dto.request.SignupRequest;
 import com.fliqo.controller.dto.response.*;
-import com.fliqo.service.MemberPolicyValidator;
 import com.fliqo.service.MemberService;
 import com.fliqo.service.PhoneVerificationService;
 import com.fliqo.service.dto.request.EmailCheckCommand;
@@ -19,6 +18,7 @@ import com.fliqo.service.dto.response.EmailCheckResult;
 import com.fliqo.service.dto.response.PhoneVerificationConfirmResult;
 import com.fliqo.service.dto.response.PhoneVerificationStartResult;
 import com.fliqo.service.dto.response.SignupResult;
+import com.fliqo.service.validator.MemberPolicyValidator;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
