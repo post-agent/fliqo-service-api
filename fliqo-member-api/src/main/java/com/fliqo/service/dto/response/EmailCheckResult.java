@@ -1,3 +1,3 @@
-package com.fliqo.service.dto;
+package com.fliqo.service.dto.response;
 
 public record EmailCheckResult(boolean exists) {}

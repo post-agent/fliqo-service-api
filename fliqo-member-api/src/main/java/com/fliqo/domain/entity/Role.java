@@ -1,4 +1,4 @@
-package com.fliqo.domain;
+package com.fliqo.domain.entity;
 
 public enum Role {
     USER,

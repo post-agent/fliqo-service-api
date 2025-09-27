@@ -1,4 +1,4 @@
-package com.fliqo.service.dto;
+package com.fliqo.service.dto.request;
 
 public record EmailCheckCommand(String email) {
     public EmailCheckCommand {

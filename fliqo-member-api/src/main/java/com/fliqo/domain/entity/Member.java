@@ -1,4 +1,4 @@
-package com.fliqo.domain;
+package com.fliqo.domain.entity;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
