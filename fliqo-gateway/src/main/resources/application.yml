@@ -1,25 +1,119 @@
+# 공통
 server:
   port: 8080
-
 spring:
   application:
     name: fliqo-gateway
-  profiles:
-    default: local
   cloud:
     gateway:
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
-
 logging:
-  level:
-    org.springframework.cloud.gateway: INFO
-    org.springframework.web.cors: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
-
 management:
   endpoints:
     web:
       exposure:
         include: health,info
+---
+# local 전용
+spring:
+  config:
+    activate:
+      on-profile: local
+  cloud:
+    gateway:
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:3000"
+#              - "http://localhost:8080"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600
+      routes:
+        - id: member-api
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/member/**,/api/auth/**
+        - id: core-api
+          uri: http://localhost:8082
+          predicates:
+            - Path=/api/market/**
+        - id: member-api-docs
+          uri: http://localhost:8081
+          predicates:
+            - Path=/v3/api-docs/member
+          filters:
+            - SetPath=/v3/api-docs
+        - id: core-api-docs
+          uri: http://localhost:8082
+          predicates:
+            - Path=/v3/api-docs/core
+          filters:
+            - SetPath=/v3/api-docs
+jwt:
+  secret: ${JWT_SECRET}
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.cors: DEBUG
+    root: INFO
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: member-api
+        url: /v3/api-docs/member
+      - name: core-api
+        url: /v3/api-docs/core
+---
+# dev 전용
+spring:
+  config:
+    activate:
+      on-profile: dev
+  cloud:
+    gateway:
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "https://www.fliqo.com"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders:
+              - "Content-Type"
+              - "Authorization"
+              - "Accept"
+              - "X-Requested-With"
+            allowCredentials: true
+            maxAge: 3600
+      routes:
+        - id: member-api
+          uri: http://member-api
+          predicates:
+            - Path=/api/member/**,/api/auth/**
+        - id: core-api
+          uri: http://core-api
+          predicates:
+            - Path=/api/core/**
+jwt:
+  secret: ${JWT_SECRET}
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO
+    org.springframework.web.cors: INFO
+    root: WARN
