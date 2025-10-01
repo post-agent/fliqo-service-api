@@ -1,7 +1,8 @@
 package com.fliqo.config;
 
-import lombok.Getter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import lombok.Getter;
 
 @Getter
 @ConfigurationProperties(prefix = "jwt")
