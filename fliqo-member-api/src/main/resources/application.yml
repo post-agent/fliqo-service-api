@@ -3,8 +3,6 @@ server:
   forward-headers-strategy: framework
 
 spring:
-  profiles:
-    active: local  # 기본 프로파일을 local로 설정
   jpa:
     hibernate:
       ddl-auto: update   # 테스트 편의용

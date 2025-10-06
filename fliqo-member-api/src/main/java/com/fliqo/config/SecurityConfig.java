@@ -24,7 +24,8 @@ public class SecurityConfig {
                                                 HttpMethod.POST,
                                                 "/api/member/email-check",
                                                 "/api/member/phone/**",
-                                                "/api/member/signup")
+                                                "/api/member/signup",
+                                                "/api/member/login")
                                         .permitAll()
                                         .requestMatchers("/error")
                                         .permitAll()

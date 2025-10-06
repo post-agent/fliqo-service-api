@@ -3,11 +3,10 @@ package com.fliqo.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.fliqo.controller.dto.request.EmailCheckRequest;
-import com.fliqo.controller.dto.request.PhoneVerifyConfirmRequest;
-import com.fliqo.controller.dto.request.PhoneVerifyStartRequest;
-import com.fliqo.controller.dto.request.SignupRequest;
+import com.fliqo.config.JwtProperties;
+import com.fliqo.controller.dto.request.*;
 import com.fliqo.controller.dto.response.*;
+import com.fliqo.service.JwtService;
 import com.fliqo.service.MemberService;
 import com.fliqo.service.PhoneVerificationService;
 import com.fliqo.service.dto.request.EmailCheckCommand;
@@ -30,6 +29,8 @@ public class MemberController {
     private final MemberService memberService;
     private final PhoneVerificationService phoneVerificationService;
     private final MemberPolicyValidator memberPolicyValidator;
+    private final JwtService jwtService;
+    private final JwtProperties jwtProperties;
 
     @PostMapping("/email-check")
     public ResponseEntity<ApiResponse<EmailCheckResponse>> check(
@@ -86,5 +87,13 @@ public class MemberController {
                                 .name(result.name())
                                 .phoneNumber(result.phoneNumber())
                                 .build()));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<TokenResponseDto> login(@Valid @RequestBody LoginRequestDto requestDto) {
+        String accessToken = memberService.login(requestDto.email(), requestDto.password());
+        long expirationSeconds = jwtProperties.getAccessMin() * 60;
+
+        return ResponseEntity.ok(TokenResponseDto.of(accessToken, expirationSeconds));
     }
 }
