@@ -2,12 +2,12 @@ package com.fliqo.service;
 
 import java.util.List;
 
-import com.fliqo.config.JwtProperties;
-import com.fliqo.controller.dto.response.TokenResponseDto;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fliqo.config.JwtProperties;
+import com.fliqo.controller.dto.response.TokenResponseDto;
 import com.fliqo.domain.entity.Member;
 import com.fliqo.domain.entity.MemberCredential;
 import com.fliqo.domain.entity.PhoneVerification;
@@ -41,8 +41,7 @@ public class MemberService {
     }
 
     /**
-     * 회원가입을 처리합니다.
-     * 이메일 중복 검증, 전화번호 인증 확인, 회원 생성, 인증정보 저장 과정을 거칩니다.
+     * 회원가입을 처리합니다. 이메일 중복 검증, 전화번호 인증 확인, 회원 생성, 인증정보 저장 과정을 거칩니다.
      *
      * @param cmd 회원가입에 필요한 정보를 담은 커맨드 객체
      * @return 생성된 회원의 정보를 담은 SignupResult
@@ -61,8 +60,7 @@ public class MemberService {
     }
 
     /**
-     * 회원가입 요청의 유효성을 검증합니다.
-     * 이메일 중복 여부를 확인합니다.
+     * 회원가입 요청의 유효성을 검증합니다. 이메일 중복 여부를 확인합니다.
      *
      * @param cmd 회원가입 커맨드 객체
      * @throws IllegalStateException 이메일이 이미 사용 중인 경우
@@ -72,39 +70,38 @@ public class MemberService {
     }
 
     /**
-     * 전화번호 인증을 확인합니다.
-     * 인증 토큰을 조회하고 전화번호가 일치하는지 검증합니다.
+     * 전화번호 인증을 확인합니다. 인증 토큰을 조회하고 전화번호가 일치하는지 검증합니다.
      *
      * @param cmd 회원가입 커맨드 객체
      * @return 검증된 PhoneVerification 객체
      * @throws IllegalArgumentException 인증 토큰이 유효하지 않거나 전화번호가 일치하지 않는 경우
      */
     private PhoneVerification verifyPhone(SignupCommand cmd) {
-        PhoneVerification phoneVerification = phoneVerificationService.getByTokenOfThrow(cmd.phoneVerificationToken());
+        PhoneVerification phoneVerification =
+                phoneVerificationService.getByTokenOfThrow(cmd.phoneVerificationToken());
         phoneVerification.assertPhoneMatches(cmd.phoneNumber());
         return phoneVerification;
     }
 
     /**
-     * 새로운 회원 엔티티를 생성하고 저장합니다.
-     * UUID, 이메일, 이름, 전화번호로 회원 정보를 구성합니다.
+     * 새로운 회원 엔티티를 생성하고 저장합니다. UUID, 이메일, 이름, 전화번호로 회원 정보를 구성합니다.
      *
      * @param cmd 회원가입 커맨드 객체
      * @return 저장된 Member 엔티티
      */
     private Member createMember(SignupCommand cmd) {
-        Member member = Member.builder()
-                .memberUuid(UuidUtil.newUuid())
-                .email(cmd.email())
-                .name(cmd.name())
-                .phone(cmd.phoneNumber())
-                .build();
+        Member member =
+                Member.builder()
+                        .memberUuid(UuidUtil.newUuid())
+                        .email(cmd.email())
+                        .name(cmd.name())
+                        .phone(cmd.phoneNumber())
+                        .build();
         return memberRepository.save(member);
     }
 
     /**
-     * 회원의 인증정보(비밀번호)를 생성하고 저장합니다.
-     * 평문 비밀번호를 암호화하여 MemberCredential 엔티티로 저장합니다.
+     * 회원의 인증정보(비밀번호)를 생성하고 저장합니다. 평문 비밀번호를 암호화하여 MemberCredential 엔티티로 저장합니다.
      *
      * @param member 인증정보를 생성할 회원 엔티티
      * @param rawPassword 암호화되지 않은 평문 비밀번호
@@ -116,8 +113,7 @@ public class MemberService {
     }
 
     /**
-     * 회원가입 결과 응답 객체를 생성합니다.
-     * 저장된 회원 정보를 바탕으로 SignupResult DTO를 구성합니다.
+     * 회원가입 결과 응답 객체를 생성합니다. 저장된 회원 정보를 바탕으로 SignupResult DTO를 구성합니다.
      *
      * @param member 생성된 회원 엔티티
      * @return 회원 정보를 담은 SignupResult 응답 객체

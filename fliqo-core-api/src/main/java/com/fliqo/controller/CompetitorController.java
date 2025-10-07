@@ -49,8 +49,9 @@ public class CompetitorController {
                             schema = @Schema(implementation = CompetitorBrandsResponse.class)))
     @GetMapping(value = "/brands", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CompetitorBrandsResponse> getBrands(
-//            @RequestHeader(name = "Authorization", required = true) String authorization
-    ) {
+            //            @RequestHeader(name = "Authorization", required = true) String
+            // authorization
+            ) {
         return ResponseEntity.ok(CompetitorBrandsResponse.sample());
     }
 
