@@ -3,10 +3,8 @@ package com.fliqo.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.fliqo.config.JwtProperties;
 import com.fliqo.controller.dto.request.*;
 import com.fliqo.controller.dto.response.*;
-import com.fliqo.service.JwtService;
 import com.fliqo.service.MemberService;
 import com.fliqo.service.PhoneVerificationService;
 import com.fliqo.service.dto.request.EmailCheckCommand;
@@ -29,8 +27,6 @@ public class MemberController {
     private final MemberService memberService;
     private final PhoneVerificationService phoneVerificationService;
     private final MemberPolicyValidator memberPolicyValidator;
-    private final JwtService jwtService;
-    private final JwtProperties jwtProperties;
 
     @PostMapping("/email-check")
     public ResponseEntity<ApiResponse<EmailCheckResponse>> check(
@@ -91,9 +87,7 @@ public class MemberController {
 
     @PostMapping("/login")
     public ResponseEntity<TokenResponseDto> login(@Valid @RequestBody LoginRequestDto requestDto) {
-        String accessToken = memberService.login(requestDto.email(), requestDto.password());
-        long expirationSeconds = jwtProperties.getAccessMin() * 60;
-
-        return ResponseEntity.ok(TokenResponseDto.of(accessToken, expirationSeconds));
+        TokenResponseDto response = memberService.login(requestDto.email(), requestDto.password());
+        return ResponseEntity.ok(response);
     }
 }
