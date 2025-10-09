@@ -54,12 +54,12 @@ public class MemberController {
 
     @PostMapping("/phone/verify/confirm")
     public ResponseEntity<ApiResponse<PhoneVerifyConfirmResponse>> phoneVerifyConfirm(
-            @Valid @RequestBody PhoneVerifyConfirmRequest phoneVerifyConfirmRequset) {
+            @Valid @RequestBody PhoneVerifyConfirmRequest phoneVerifyConfirmRequest) {
         PhoneVerificationConfirmResult phoneVerificationConfirmResult =
                 phoneVerificationService.confirm(
                         PhoneVerificationConfirmCommand.of(
-                                phoneVerifyConfirmRequset.verificationId(),
-                                phoneVerifyConfirmRequset.code()));
+                                phoneVerifyConfirmRequest.verificationId(),
+                                phoneVerifyConfirmRequest.code()));
 
         return ResponseEntity.ok(
                 ApiResponse.ok(
