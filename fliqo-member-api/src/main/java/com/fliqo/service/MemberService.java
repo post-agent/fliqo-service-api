@@ -35,25 +35,25 @@ public class MemberService {
     private final JwtProperties jwtProperties;
 
     @Transactional(readOnly = true)
-    public EmailCheckResult checkEmail(EmailCheckCommand cmd) {
-        boolean exists = memberRepository.existsByEmail(cmd.email());
+    public EmailCheckResult checkEmail(EmailCheckCommand emailCheckCmd) {
+        boolean exists = memberRepository.existsByEmail(emailCheckCmd.email());
         return new EmailCheckResult(exists);
     }
 
     /**
      * 회원가입을 처리합니다. 이메일 중복 검증, 전화번호 인증 확인, 회원 생성, 인증정보 저장 과정을 거칩니다.
      *
-     * @param cmd 회원가입에 필요한 정보를 담은 커맨드 객체
+     * @param signupCmd 회원가입에 필요한 정보를 담은 커맨드 객체
      * @return 생성된 회원의 정보를 담은 SignupResult
      * @throws IllegalStateException 이메일이 이미 사용 중인 경우
      * @throws IllegalArgumentException 전화번호 인증이 유효하지 않은 경우
      */
     @Transactional
-    public SignupResult signup(SignupCommand cmd) {
-        validateSignupRequest(cmd);
-        PhoneVerification phoneVerification = verifyPhone(cmd);
-        Member member = createMember(cmd);
-        createCredential(member, cmd.rawPassword());
+    public SignupResult signup(SignupCommand signupCmd) {
+        validateSignupRequest(signupCmd);
+        PhoneVerification phoneVerification = verifyPhone(signupCmd);
+        Member member = createMember(signupCmd);
+        createCredential(member, signupCmd.rawPassword());
         phoneVerificationService.consumeToken(phoneVerification);
 
         return buildSignupResult(member);
@@ -62,40 +62,40 @@ public class MemberService {
     /**
      * 회원가입 요청의 유효성을 검증합니다. 이메일 중복 여부를 확인합니다.
      *
-     * @param cmd 회원가입 커맨드 객체
+     * @param signupCmd 회원가입 커맨드 객체
      * @throws IllegalStateException 이메일이 이미 사용 중인 경우
      */
-    private void validateSignupRequest(SignupCommand cmd) {
-        memberPolicyValidator.ensureEmailAvailable(cmd.email());
+    private void validateSignupRequest(SignupCommand signupCmd) {
+        memberPolicyValidator.ensureEmailAvailable(signupCmd.email());
     }
 
     /**
      * 전화번호 인증을 확인합니다. 인증 토큰을 조회하고 전화번호가 일치하는지 검증합니다.
      *
-     * @param cmd 회원가입 커맨드 객체
+     * @param signupCmd 회원가입 커맨드 객체
      * @return 검증된 PhoneVerification 객체
      * @throws IllegalArgumentException 인증 토큰이 유효하지 않거나 전화번호가 일치하지 않는 경우
      */
-    private PhoneVerification verifyPhone(SignupCommand cmd) {
+    private PhoneVerification verifyPhone(SignupCommand signupCmd) {
         PhoneVerification phoneVerification =
-                phoneVerificationService.getByTokenOfThrow(cmd.phoneVerificationToken());
-        phoneVerification.assertPhoneMatches(cmd.phoneNumber());
+                phoneVerificationService.getByTokenOfThrow(signupCmd.phoneVerificationToken());
+        phoneVerification.assertPhoneMatches(signupCmd.phoneNumber());
         return phoneVerification;
     }
 
     /**
      * 새로운 회원 엔티티를 생성하고 저장합니다. UUID, 이메일, 이름, 전화번호로 회원 정보를 구성합니다.
      *
-     * @param cmd 회원가입 커맨드 객체
+     * @param signupCmd 회원가입 커맨드 객체
      * @return 저장된 Member 엔티티
      */
-    private Member createMember(SignupCommand cmd) {
+    private Member createMember(SignupCommand signupCmd) {
         Member member =
                 Member.builder()
                         .memberUuid(UuidUtil.newUuid())
-                        .email(cmd.email())
-                        .name(cmd.name())
-                        .phone(cmd.phoneNumber())
+                        .email(signupCmd.email())
+                        .name(signupCmd.name())
+                        .phone(signupCmd.phoneNumber())
                         .build();
         return memberRepository.save(member);
     }

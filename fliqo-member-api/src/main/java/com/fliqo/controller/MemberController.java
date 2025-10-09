@@ -30,64 +30,67 @@ public class MemberController {
 
     @PostMapping("/email-check")
     public ResponseEntity<ApiResponse<EmailCheckResponse>> check(
-            @Valid @RequestBody EmailCheckRequest req) {
-        EmailCheckCommand cmd = new EmailCheckCommand(req.email().toLowerCase());
-        EmailCheckResult result = memberService.checkEmail(cmd);
+            @Valid @RequestBody EmailCheckRequest emailCheckRequest) {
+        EmailCheckCommand emailCheckCmd = new EmailCheckCommand(emailCheckRequest.email().toLowerCase());
+        EmailCheckResult emailCheckResult = memberService.checkEmail(emailCheckCmd);
 
-        EmailCheckResponse resp = EmailCheckResponse.of(result.exists());
-        return ResponseEntity.ok(ApiResponse.ok(resp));
+        EmailCheckResponse emailCheckResponse = EmailCheckResponse.of(emailCheckResult.exists());
+        return ResponseEntity.ok(ApiResponse.ok(emailCheckResponse));
     }
 
     @PostMapping("/phone/verify/request")
     public ResponseEntity<ApiResponse<PhoneVerifyRequestResponse>> phoneVerifyRequest(
-            @Valid @RequestBody PhoneVerifyStartRequest req) {
-        PhoneVerificationStartResult res =
-                phoneVerificationService.start(PhoneVerificationStartCommand.of(req.phoneNumber()));
+            @Valid @RequestBody PhoneVerifyStartRequest phoneVerifyStartRequest) {
+        PhoneVerificationStartResult phoneVerificationStartResult =
+                phoneVerificationService.start(PhoneVerificationStartCommand.of(phoneVerifyStartRequest.phoneNumber()));
         return ResponseEntity.ok(
                 ApiResponse.ok(
                         PhoneVerifyRequestResponse.of(
-                                res.verificationId(), res.expiresInMinutes())));
+                                phoneVerificationStartResult.verificationId(),
+                                phoneVerificationStartResult.expiresInMinutes())));
     }
 
     @PostMapping("/phone/verify/confirm")
     public ResponseEntity<ApiResponse<PhoneVerifyConfirmResponse>> phoneVerifyConfirm(
-            @Valid @RequestBody PhoneVerifyConfirmRequest req) {
-        PhoneVerificationConfirmResult res =
+            @Valid @RequestBody PhoneVerifyConfirmRequest phoneVerifyConfirmRequset) {
+        PhoneVerificationConfirmResult phoneVerificationConfirmResult =
                 phoneVerificationService.confirm(
-                        PhoneVerificationConfirmCommand.of(req.verificationId(), req.code()));
+                        PhoneVerificationConfirmCommand.of(
+                                phoneVerifyConfirmRequset.verificationId(),
+                                phoneVerifyConfirmRequset.code()));
 
         return ResponseEntity.ok(
-                ApiResponse.ok(PhoneVerifyConfirmResponse.of(res.verificationToken())));
+                ApiResponse.ok(PhoneVerifyConfirmResponse.of(phoneVerificationConfirmResult.verificationToken())));
     }
 
     @PostMapping("/signup")
     public ResponseEntity<ApiResponse<SignupResponse>> signup(
-            @Valid @RequestBody SignupRequest req) {
-        memberPolicyValidator.validateOrThrow(req.password(), req.passwordConfirm());
+            @Valid @RequestBody SignupRequest signupRequest) {
+        memberPolicyValidator.validateOrThrow(signupRequest.password(), signupRequest.passwordConfirm());
 
-        SignupResult result =
+        SignupResult signupResult =
                 memberService.signup(
                         SignupCommand.builder()
-                                .email(req.email())
-                                .rawPassword(req.password())
-                                .name(req.name())
-                                .phoneNumber(req.phoneNumber())
-                                .phoneVerificationToken(req.phoneVerificationToken())
+                                .email(signupRequest.email())
+                                .rawPassword(signupRequest.password())
+                                .name(signupRequest.name())
+                                .phoneNumber(signupRequest.phoneNumber())
+                                .phoneVerificationToken(signupRequest.phoneVerificationToken())
                                 .build());
 
         return ResponseEntity.ok(
                 ApiResponse.ok(
                         SignupResponse.builder()
-                                .memberUuid(result.memberUuid())
-                                .email(result.email())
-                                .name(result.name())
-                                .phoneNumber(result.phoneNumber())
+                                .memberUuid(signupResult.memberUuid())
+                                .email(signupResult.email())
+                                .name(signupResult.name())
+                                .phoneNumber(signupResult.phoneNumber())
                                 .build()));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<TokenResponseDto> login(@Valid @RequestBody LoginRequestDto requestDto) {
-        TokenResponseDto response = memberService.login(requestDto.email(), requestDto.password());
-        return ResponseEntity.ok(response);
+    public ResponseEntity<TokenResponseDto> login(@Valid @RequestBody LoginRequestDto loginRequestDto) {
+        TokenResponseDto tokenResponseDto = memberService.login(loginRequestDto.email(), loginRequestDto.password());
+        return ResponseEntity.ok(tokenResponseDto);
     }
 }
