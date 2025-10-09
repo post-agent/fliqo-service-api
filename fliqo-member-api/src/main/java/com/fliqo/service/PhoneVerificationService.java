@@ -41,18 +41,22 @@ public class PhoneVerificationService {
      * @return 인증 세션 ID와 만료 정보를 담은 결과 객체
      */
     @Transactional
-    public PhoneVerificationStartResult start(PhoneVerificationStartCommand phoneVerificationStartCmd) {
+    public PhoneVerificationStartResult start(
+            PhoneVerificationStartCommand phoneVerificationStartCmd) {
         // 인증 코드 생성 및 엔터티 생성
         String code = generateCode();
-        PhoneVerification phoneVerification = PhoneVerification.createNew(phoneVerificationStartCmd.phoneNumber(), code);
+        PhoneVerification phoneVerification =
+                PhoneVerification.createNew(phoneVerificationStartCmd.phoneNumber(), code);
 
         // 저장
         repository.save(phoneVerification);
 
         // SMS 발송
-        smsSender.send(phoneVerificationStartCmd.phoneNumber(), "[Fliqo] 인증번호: " + code + " (유효시간 3분)");
+        smsSender.send(
+                phoneVerificationStartCmd.phoneNumber(), "[Fliqo] 인증번호: " + code + " (유효시간 3분)");
 
-        return PhoneVerificationStartResult.of(phoneVerification.getId(), phoneVerification.expiresInSeconds());
+        return PhoneVerificationStartResult.of(
+                phoneVerification.getId(), phoneVerification.expiresInSeconds());
     }
 
     /**
@@ -65,8 +69,10 @@ public class PhoneVerificationService {
      * @return 검증 토큰을 담은 결과 객체
      */
     @Transactional
-    public PhoneVerificationConfirmResult confirm(PhoneVerificationConfirmCommand phoneVerificationConfirmCmd) {
-        PhoneVerification phoneVerification = validator.mustExist(phoneVerificationConfirmCmd.verificationId());
+    public PhoneVerificationConfirmResult confirm(
+            PhoneVerificationConfirmCommand phoneVerificationConfirmCmd) {
+        PhoneVerification phoneVerification =
+                validator.mustExist(phoneVerificationConfirmCmd.verificationId());
         phoneVerification.verify(phoneVerificationConfirmCmd.code());
         repository.save(phoneVerification);
 

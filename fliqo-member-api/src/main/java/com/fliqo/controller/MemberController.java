@@ -31,7 +31,8 @@ public class MemberController {
     @PostMapping("/email-check")
     public ResponseEntity<ApiResponse<EmailCheckResponse>> check(
             @Valid @RequestBody EmailCheckRequest emailCheckRequest) {
-        EmailCheckCommand emailCheckCmd = new EmailCheckCommand(emailCheckRequest.email().toLowerCase());
+        EmailCheckCommand emailCheckCmd =
+                new EmailCheckCommand(emailCheckRequest.email().toLowerCase());
         EmailCheckResult emailCheckResult = memberService.checkEmail(emailCheckCmd);
 
         EmailCheckResponse emailCheckResponse = EmailCheckResponse.of(emailCheckResult.exists());
@@ -42,7 +43,8 @@ public class MemberController {
     public ResponseEntity<ApiResponse<PhoneVerifyRequestResponse>> phoneVerifyRequest(
             @Valid @RequestBody PhoneVerifyStartRequest phoneVerifyStartRequest) {
         PhoneVerificationStartResult phoneVerificationStartResult =
-                phoneVerificationService.start(PhoneVerificationStartCommand.of(phoneVerifyStartRequest.phoneNumber()));
+                phoneVerificationService.start(
+                        PhoneVerificationStartCommand.of(phoneVerifyStartRequest.phoneNumber()));
         return ResponseEntity.ok(
                 ApiResponse.ok(
                         PhoneVerifyRequestResponse.of(
@@ -60,13 +62,16 @@ public class MemberController {
                                 phoneVerifyConfirmRequset.code()));
 
         return ResponseEntity.ok(
-                ApiResponse.ok(PhoneVerifyConfirmResponse.of(phoneVerificationConfirmResult.verificationToken())));
+                ApiResponse.ok(
+                        PhoneVerifyConfirmResponse.of(
+                                phoneVerificationConfirmResult.verificationToken())));
     }
 
     @PostMapping("/signup")
     public ResponseEntity<ApiResponse<SignupResponse>> signup(
             @Valid @RequestBody SignupRequest signupRequest) {
-        memberPolicyValidator.validateOrThrow(signupRequest.password(), signupRequest.passwordConfirm());
+        memberPolicyValidator.validateOrThrow(
+                signupRequest.password(), signupRequest.passwordConfirm());
 
         SignupResult signupResult =
                 memberService.signup(
@@ -89,8 +94,10 @@ public class MemberController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<TokenResponseDto> login(@Valid @RequestBody LoginRequestDto loginRequestDto) {
-        TokenResponseDto tokenResponseDto = memberService.login(loginRequestDto.email(), loginRequestDto.password());
+    public ResponseEntity<TokenResponseDto> login(
+            @Valid @RequestBody LoginRequestDto loginRequestDto) {
+        TokenResponseDto tokenResponseDto =
+                memberService.login(loginRequestDto.email(), loginRequestDto.password());
         return ResponseEntity.ok(tokenResponseDto);
     }
 }
