@@ -20,6 +20,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import com.fliqo.dto.CommonResponse;
+
 @RestController
 @RequestMapping("/api/market/competitors")
 @Tag(name = "Competitors", description = "경쟁 분석")
@@ -44,14 +46,17 @@ public class CompetitorController {
     @ApiResponse(
             responseCode = "200",
             content =
-                    @Content(
-                            mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = CompetitorBrandsResponse.class)))
+            @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = CommonResponse.class)))
     @GetMapping(value = "/brands", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<CompetitorBrandsResponse> getBrands(
+    public ResponseEntity<CommonResponse<CompetitorBrandsResponse>> getBrands(
 //            @RequestHeader(name = "Authorization", required = true) String authorization
     ) {
-        return ResponseEntity.ok(CompetitorBrandsResponse.sample());
+        CompetitorBrandsResponse data = CompetitorBrandsResponse.sample();
+        return ResponseEntity
+                .ok()
+                .body(CommonResponse.success(data, "브랜드 점유율 조회 성공"));
     }
 
     @Operation(summary = "가격 지수 조회")
