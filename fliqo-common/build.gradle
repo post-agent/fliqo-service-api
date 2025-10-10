@@ -6,9 +6,13 @@ dependencies {
 
     // DTO에 Bean Validation 애노테이션
     api 'jakarta.validation:jakarta.validation-api'
+    api 'org.springframework:spring-web'
+    compileOnly 'jakarta.servlet:jakarta.servlet-api:6.0.0'
 
     // 유틸리티
     api 'org.apache.commons:commons-lang3'
+
+    api 'com.fasterxml.jackson.core:jackson-databind:2.15.3'
 
 }
 
