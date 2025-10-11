@@ -31,8 +31,7 @@ public class MemberController {
     @PostMapping("/email-check")
     public ResponseEntity<ApiResponse<EmailCheckResponse>> check(
             @Valid @RequestBody EmailCheckRequest emailCheckRequest) {
-        EmailCheckCommand emailCheckCmd =
-                new EmailCheckCommand(emailCheckRequest.email().toLowerCase());
+        EmailCheckCommand emailCheckCmd = EmailCheckCommand.of(emailCheckRequest.email());
         EmailCheckResult emailCheckResult = memberService.checkEmail(emailCheckCmd);
 
         EmailCheckResponse emailCheckResponse = EmailCheckResponse.of(emailCheckResult.exists());
