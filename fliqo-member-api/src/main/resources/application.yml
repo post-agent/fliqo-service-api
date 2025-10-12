@@ -3,6 +3,12 @@ server:
   forward-headers-strategy: framework
 
 spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
   jpa:
     hibernate:
       ddl-auto: update   # 테스트 편의용
@@ -25,3 +31,10 @@ springdoc:
     path: /swagger-ui.html
     try-it-out-enabled: true
   show-actuator: true
+
+jwt:
+  issuer: fliqo-service
+  access-min: 1440
+  refresh-day: 7
+  # 32바이트 이상을 Base64로
+  secret-base64: ${JWT_SECRET}
