@@ -33,8 +33,14 @@ springdoc:
   show-actuator: true
 
 jwt:
-  issuer: fliqo-service
+  issuer: fliqo-auth
+  audience: fliqo-services
+  secret: ${JWT_SECRET}
+  header-injection:
+    enabled: true
+    user-id-claim: "sub"
+    roles-claim: "roles"
+
+auth:
   access-min: 1440
   refresh-day: 7
-  # 32바이트 이상을 Base64로
-  secret-base64: ${JWT_SECRET}

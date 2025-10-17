@@ -113,7 +113,13 @@ spring:
           predicates:
             - Path=/api/core/**
 jwt:
+  issuer: fliqo-auth
+  audience: fliqo-services
   secret: ${JWT_SECRET}
+  header-injection:
+    enabled: true
+    user-id-claim: "sub"
+    roles-claim: "roles"
 logging:
   level:
     org.springframework.cloud.gateway: INFO
