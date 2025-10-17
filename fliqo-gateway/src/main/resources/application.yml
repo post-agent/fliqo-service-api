@@ -63,7 +63,13 @@ spring:
           filters:
             - SetPath=/v3/api-docs
 jwt:
+  issuer: fliqo-auth
+  audience: fliqo-services
   secret: ${JWT_SECRET}
+  header-injection:
+    enabled: true
+    user-id-claim: "sub"
+    roles-claim: "roles"
 logging:
   level:
     org.springframework.cloud.gateway: DEBUG
