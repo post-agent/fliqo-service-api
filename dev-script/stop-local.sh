@@ -11,9 +11,10 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 LOG_DIR="$SCRIPT_DIR/logs"
 
 # 포트/모듈 매핑 (run-local.sh와 동일 포트 사용)
-MODULES=("fliqo-core-api" "fliqo-member-api" "fliqo-gateway")
+MODULES=("fliqo-common" "fliqo-core-api" "fliqo-member-api" "fliqo-gateway")
 port_of() {
   case "$1" in
+    fliqo-common) echo "0" ;;        # common은 라이브러리 모듈이므로 포트 없음
     fliqo-core-api) echo 8082 ;;
     fliqo-member-api) echo 8081 ;;
     fliqo-gateway) echo 8080 ;;

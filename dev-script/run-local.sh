@@ -17,10 +17,11 @@ GRADLE="$REPO_ROOT/gradlew"
 LOG_DIR="$SCRIPT_DIR/logs"
 KILL_BUSY_PORTS="${KILL_BUSY_PORTS:-1}"     # 1: 포트점유 프로세스 종료
 
-# 모듈/포트 정의 (연관배열 없이 Bash 3.2 호환)
-MODULES=("fliqo-core-api" "fliqo-member-api" "fliqo-gateway")
+# 모듈/포트 정의 (의존성 순서대로)
+MODULES=("fliqo-common" "fliqo-core-api" "fliqo-member-api" "fliqo-gateway")
 port_of() {
   case "$1" in
+    fliqo-common) echo "0" ;;        # common은 라이브러리 모듈이므로 포트 없음
     fliqo-core-api) echo 8082 ;;
     fliqo-member-api) echo 8081 ;;
     fliqo-gateway) echo 8080 ;;
@@ -65,6 +66,12 @@ start_module() {
   local log_file="$LOG_DIR/$module.log"
   local pid_file="$LOG_DIR/$module.pid"
 
+  # fliqo-common은 라이브러리 모듈이므로 실행하지 않음
+  if [[ "$module" == "fliqo-common" ]]; then
+    echo "${module} (라이브러리 모듈) - 실행 생략"
+    return 0
+  fi
+
   echo "🩷 ${module} (port ${port}, profile=${PROFILE}) 시작"
 
   kill_if_port_busy "$port"
@@ -87,9 +94,13 @@ else
   echo "빌드 스킵(SKIP_BUILD=1)"
 fi
 
-# ====== 모듈 실행: core → member → gateway ======
+# ====== 모듈 실행: common → core → member → gateway ======
 for m in "${MODULES[@]}"; do
   start_module "$m" "$(port_of "$m")"
+  # 각 모듈 간 약간의 대기 시간 (의존성 모듈 준비 시간)
+  if [[ "$m" != "fliqo-common" ]]; then
+    sleep 2
+  fi
 done
 
 echo ""
