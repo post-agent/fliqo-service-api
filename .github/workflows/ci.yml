@@ -1,0 +1,252 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GRADLE_OPTS: -Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2
+
+jobs:
+  # Gradle Wrapper 검증
+  gradle-wrapper-validation:
+    name: Gradle Wrapper Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Validate Gradle Wrapper
+        uses: gradle/actions/wrapper-validation@v3
+
+  # 변경된 모듈 감지
+  detect-changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      common-changed: ${{ steps.changes.outputs.fliqo-common }}
+      gateway-changed: ${{ steps.changes.outputs.fliqo-gateway }}
+      member-api-changed: ${{ steps.changes.outputs.fliqo-member-api }}
+      core-api-changed: ${{ steps.changes.outputs.fliqo-core-api }}
+      any-changed: ${{ steps.changes.outputs.any-changed }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Detect changes
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            fliqo-common:
+              - 'fliqo-common/**'
+            fliqo-gateway:
+              - 'fliqo-gateway/**'
+            fliqo-member-api:
+              - 'fliqo-member-api/**'
+            fliqo-core-api:
+              - 'fliqo-core-api/**'
+            any-changed:
+              - 'fliqo-common/**'
+              - 'fliqo-gateway/**'
+              - 'fliqo-member-api/**'
+              - 'fliqo-core-api/**'
+              - 'build.gradle'
+              - 'settings.gradle'
+              - 'gradle/**'
+              - 'gradlew*'
+              - 'gradle/wrapper/**'
+
+  # fliqo-common 빌드
+  build-common:
+    name: Build fliqo-common
+    runs-on: ubuntu-latest
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.any-changed == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+      
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
+      
+      - name: Run Quality Checks and Build
+        run: ./gradlew :fliqo-common:spotlessCheck :fliqo-common:check :fliqo-common:build
+      
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fliqo-common-test-results
+          path: fliqo-common/build/test-results/test/
+      
+      - name: Upload build reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fliqo-common-build-reports
+          path: fliqo-common/build/reports/
+
+  # fliqo-gateway 빌드
+  build-gateway:
+    name: Build fliqo-gateway
+    runs-on: ubuntu-latest
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.gateway-changed == 'true' || needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.any-changed == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+      
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
+      
+      - name: Run Quality Checks and Build
+        run: ./gradlew :fliqo-gateway:spotlessCheck :fliqo-gateway:check :fliqo-gateway:build
+      
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fliqo-gateway-test-results
+          path: fliqo-gateway/build/test-results/test/
+      
+      - name: Upload build reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fliqo-gateway-build-reports
+          path: fliqo-gateway/build/reports/
+
+  # fliqo-member-api 빌드
+  build-member-api:
+    name: Build fliqo-member-api
+    runs-on: ubuntu-latest
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.member-api-changed == 'true' || needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.any-changed == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+      
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
+      
+      - name: Run Quality Checks and Build
+        run: ./gradlew :fliqo-member-api:spotlessCheck :fliqo-member-api:check :fliqo-member-api:build
+      
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fliqo-member-api-test-results
+          path: fliqo-member-api/build/test-results/test/
+      
+      - name: Upload build reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fliqo-member-api-build-reports
+          path: fliqo-member-api/build/reports/
+
+  # fliqo-core-api 빌드
+  build-core-api:
+    name: Build fliqo-core-api
+    runs-on: ubuntu-latest
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.core-api-changed == 'true' || needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.any-changed == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+      
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
+      
+      - name: Run Quality Checks and Build
+        run: ./gradlew :fliqo-core-api:spotlessCheck :fliqo-core-api:check :fliqo-core-api:build
+      
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fliqo-core-api-test-results
+          path: fliqo-core-api/build/test-results/test/
+      
+      - name: Upload build reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fliqo-core-api-build-reports
+          path: fliqo-core-api/build/reports/
+
+  # 전체 빌드 상태 확인
+  ci-status:
+    name: CI Status
+    runs-on: ubuntu-latest
+    needs: [gradle-wrapper-validation, detect-changes, build-common, build-gateway, build-member-api, build-core-api]
+    if: always()
+    steps:
+      - name: Check CI Status
+        run: |
+          echo "Gradle Wrapper Validation: ${{ needs.gradle-wrapper-validation.result }}"
+          echo "Changes Detected: ${{ needs.detect-changes.result }}"
+          echo "Common Build: ${{ needs.build-common.result }}"
+          echo "Gateway Build: ${{ needs.build-gateway.result }}"
+          echo "Member API Build: ${{ needs.build-member-api.result }}"
+          echo "Core API Build: ${{ needs.build-core-api.result }}"
+          
+          if [[ "${{ needs.gradle-wrapper-validation.result }}" == "failure" ]] || 
+             [[ "${{ needs.build-common.result }}" == "failure" ]] || 
+             [[ "${{ needs.build-gateway.result }}" == "failure" ]] || 
+             [[ "${{ needs.build-member-api.result }}" == "failure" ]] || 
+             [[ "${{ needs.build-core-api.result }}" == "failure" ]]; then
+            echo "CI failed"
+            exit 1
+          else
+            echo "CI passed"
+          fi
