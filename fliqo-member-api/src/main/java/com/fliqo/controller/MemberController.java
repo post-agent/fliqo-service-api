@@ -1,5 +1,6 @@
 package com.fliqo.controller;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +20,9 @@ import com.fliqo.service.validator.MemberPolicyValidator;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -98,5 +102,19 @@ public class MemberController {
         TokenResponseDto tokenResponseDto =
                 memberService.login(loginRequestDto.email(), loginRequestDto.password());
         return ResponseEntity.ok(tokenResponseDto);
+    }
+
+    @GetMapping("/me")
+    public Map<String, Object> me(
+            @RequestHeader(value = "X-User-Id", required = false) String userId,
+            @RequestHeader(value = "X-User-Roles", required = false) String rolesCsv
+    ) {
+        if (userId == null || userId.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing X-User-Id");
+        }
+        return Map.of(
+                "userId", userId,
+                "roles", rolesCsv
+        );
     }
 }
