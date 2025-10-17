@@ -27,6 +27,7 @@ public class SecurityConfig {
                                                 "/api/member/signup",
                                                 "/api/member/login")
                                         .permitAll()
+                                        .requestMatchers(HttpMethod.GET, "/api/member/me").permitAll()
                                         .requestMatchers("/error")
                                         .permitAll()
                                         .anyRequest()
