@@ -14,6 +14,9 @@ dependencies {
 
     api 'com.fasterxml.jackson.core:jackson-databind:2.15.3'
 
+    compileOnly 'org.springframework.boot:spring-boot'
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
 }
 
 // common 모듈은 실행 가능한 JAR이 아님
@@ -26,3 +29,5 @@ tasks.named('jar') {
     enabled = true
     archiveClassifier = ''
 }
+
+tasks.matching { it.name == "bootJar" }.configureEach { enabled = false }

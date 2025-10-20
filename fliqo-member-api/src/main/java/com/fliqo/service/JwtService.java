@@ -8,10 +8,12 @@ import java.util.UUID;
 
 import javax.crypto.SecretKey;
 
+import com.fliqo.config.AuthProperties;
+import com.fliqo.jwt.JwtClaimKeys;
+import com.fliqo.jwt.JwtProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-import com.fliqo.config.JwtProperties;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -21,16 +23,16 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-@EnableConfigurationProperties(JwtProperties.class)
 public class JwtService {
     private final JwtProperties jwtProperties;
+    private final AuthProperties authProperties;
     private SecretKey secretKey;
 
     @PostConstruct
     void init() {
-        String base64 = jwtProperties.getSecretBase64();
+        String base64 = jwtProperties.secret();
         if (base64 == null || base64.isBlank()) {
-            throw new IllegalStateException("jwt.secret-base64 is null/blank"); // 원인 명확화
+            throw new IllegalStateException("jwt.secret is null/blank"); // 원인 명확화
         }
         byte[] bytes = Decoders.BASE64.decode(base64);
         this.secretKey = Keys.hmacShaKeyFor(bytes);
@@ -38,15 +40,22 @@ public class JwtService {
 
     public String createToken(String subjectEmail, List<String> roles) {
         Instant now = Instant.now();
-        Instant expirationTime = now.plus(jwtProperties.getAccessMin(), ChronoUnit.MINUTES);
+        Instant expirationTime = now.plus(authProperties.accessMin(), ChronoUnit.MINUTES);
+
+        String rolesClaim = jwtProperties.headerInjection() != null
+                && jwtProperties.headerInjection().rolesClaim() != null
+                && !jwtProperties.headerInjection().rolesClaim().isBlank()
+                ? jwtProperties.headerInjection().rolesClaim()
+                : JwtClaimKeys.ROLES;
 
         return Jwts.builder()
-                .issuer(jwtProperties.getIssuer())
+                .issuer(jwtProperties.issuer())
+                .audience().add(jwtProperties.audience()).and()
                 .subject(subjectEmail)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expirationTime))
                 .id(UUID.randomUUID().toString())
-                .claim("roles", roles)
+                .claim(rolesClaim, roles)
                 .signWith(secretKey)
                 .compact();
     }
