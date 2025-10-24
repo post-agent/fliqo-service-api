@@ -5,7 +5,4 @@ import org.springframework.validation.annotation.Validated;
 
 @Validated
 @ConfigurationProperties(prefix = "auth")
-public record AuthProperties(
-        long accessMin,
-        long refreshDay
-) {}
+public record AuthProperties(long accessMin, long refreshDay) {}

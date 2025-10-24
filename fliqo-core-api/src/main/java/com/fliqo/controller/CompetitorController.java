@@ -13,14 +13,13 @@ import com.fliqo.controller.dto.response.competitor.CompetitorListResponse;
 import com.fliqo.controller.dto.response.competitor.CompetitorMapResponse;
 import com.fliqo.controller.dto.response.competitor.CompetitorPriceIndexResponse;
 import com.fliqo.controller.dto.response.competitor.CompetitorSummaryResponse;
+import com.fliqo.dto.CommonResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-
-import com.fliqo.dto.CommonResponse;
 
 @RestController
 @RequestMapping("/api/market/competitors")
@@ -46,17 +45,16 @@ public class CompetitorController {
     @ApiResponse(
             responseCode = "200",
             content =
-            @Content(
-                    mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = CommonResponse.class)))
+                    @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = CommonResponse.class)))
     @GetMapping(value = "/brands", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CommonResponse<CompetitorBrandsResponse>> getBrands(
-//            @RequestHeader(name = "Authorization", required = true) String authorization
-    ) {
+            //            @RequestHeader(name = "Authorization", required = true) String
+            // authorization
+            ) {
         CompetitorBrandsResponse data = CompetitorBrandsResponse.sample();
-        return ResponseEntity
-                .ok()
-                .body(CommonResponse.success(data, "브랜드 점유율 조회 성공"));
+        return ResponseEntity.ok().body(CommonResponse.success(data, "브랜드 점유율 조회 성공"));
     }
 
     @Operation(summary = "가격 지수 조회")

@@ -2,11 +2,11 @@ package com.fliqo.service;
 
 import java.util.List;
 
-import com.fliqo.config.AuthProperties;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fliqo.config.AuthProperties;
 import com.fliqo.controller.dto.response.TokenResponseDto;
 import com.fliqo.domain.entity.Member;
 import com.fliqo.domain.entity.MemberCredential;
