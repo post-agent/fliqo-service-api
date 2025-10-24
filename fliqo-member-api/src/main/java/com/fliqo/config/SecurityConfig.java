@@ -25,7 +25,8 @@ public class SecurityConfig {
                                                 "/api/member/email-check",
                                                 "/api/member/phone/**",
                                                 "/api/member/signup",
-                                                "/api/member/login")
+                                                "/api/member/login",
+                                                "/api/member/password/reset/**")
                                         .permitAll()
                                         .requestMatchers(HttpMethod.GET, "/api/member/me")
                                         .permitAll()
