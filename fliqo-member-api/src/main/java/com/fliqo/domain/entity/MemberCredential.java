@@ -72,6 +72,25 @@ public class MemberCredential {
         return MemberCredential.builder().member(member).passwordHash(passwordHash).build();
     }
 
+    /**
+     * 비밀번호를 변경합니다.
+     *
+     * <p>비밀번호 변경 시 비밀번호 해시는 반드시 <b>이미 암호화된 값</b>이어야 하며, 이 메서드 내에서는 암호화를 수행하지 않습니다. 또한 변경 시 실패 횟수와
+     * 잠금 상태를 초기화하고, 변경 시각을 기록합니다.
+     *
+     * @param encodedPassword 이미 암호화된(해시된) 비밀번호 문자열
+     */
+    public void changePassword(String encodedPassword) {
+        if (encodedPassword == null || encodedPassword.isBlank()) {
+            throw new IllegalArgumentException("비밀번호는 비어 있을 수 없습니다.");
+        }
+
+        this.passwordHash = encodedPassword;
+        this.passwordChangedAt = LocalDateTime.now();
+        this.failedLoginAttempts = 0;
+        this.lockedUntil = null;
+    }
+
     @PrePersist
     void prePersist() {
         if (passwordChangedAt == null) this.passwordChangedAt = LocalDateTime.now();
