@@ -21,21 +21,64 @@ KILL_BUSY_PORTS="${KILL_BUSY_PORTS:-1}"     # 1: 포트점유 프로세스 종�
 # .env 파일이 있으면 로드
 if [[ -f "$REPO_ROOT/.env" ]]; then
   echo "📄 .env 파일 로드 중..."
-  set -a  # 자동으로 export
-  source "$REPO_ROOT/.env"
-  set +a  # export 해제
+  # .env 파일의 각 줄을 읽어서 환경변수로 설정
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    # 주석이나 빈 줄은 건너뛰기
+    if [[ "$line" =~ ^[[:space:]]*# ]] || [[ -z "${line// }" ]]; then
+      continue
+    fi
+    # 환경변수 설정
+    if [[ "$line" =~ ^[A-Za-z_][A-Za-z0-9_]*= ]]; then
+      export "$line"
+    fi
+  done < "$REPO_ROOT/.env"
 fi
 
-# JWT_SECRET이 설정되지 않았으면 경고
+# 필수 환경변수 체크
+MISSING_VARS=()
+
 if [[ -z "${JWT_SECRET:-}" ]]; then
-  echo "⚠️  JWT_SECRET이 설정되지 않았습니다"
+  MISSING_VARS+=("JWT_SECRET")
+fi
+
+if [[ -z "${DB_URL:-}" ]]; then
+  MISSING_VARS+=("DB_URL")
+fi
+
+if [[ -z "${DB_USERNAME:-}" ]]; then
+  MISSING_VARS+=("DB_USERNAME")
+fi
+
+if [[ -z "${DB_PASSWORD:-}" ]]; then
+  MISSING_VARS+=("DB_PASSWORD")
+fi
+
+if [[ ${#MISSING_VARS[@]} -gt 0 ]]; then
+  echo "⚠️  다음 환경변수들이 설정되지 않았습니다:"
+  printf "   - %s\n" "${MISSING_VARS[@]}"
+  echo ""
   echo "   다음 중 하나를 선택하세요:"
-  echo "   1. .env 파일에 JWT_SECRET=your-secret 추가"
-  echo "     - echo "JWT_SECRET=your-secret" > .env"
-  echo "   2. 터미널에서 export JWT_SECRET=your-secret 실행"
+  echo "   1. .env 파일에 환경변수 추가:"
+  echo "      echo \"JWT_SECRET=your-secret\" >> .env"
+  echo "      echo \"DB_URL=jdbc:mysql://localhost:3306/fliqo?useSSL=false\" >> .env"
+  echo "      echo \"DB_USERNAME=root\" >> .env"
+  echo "      echo \"DB_PASSWORD=password\" >> .env"
+  echo ""
+  echo "   2. 터미널에서 직접 export:"
+  echo "      export JWT_SECRET=your-secret"
+  echo "      export DB_URL=jdbc:mysql://localhost:3306/fliqo?useSSL=false"
+  echo "      export DB_USERNAME=root"
+  echo "      export DB_PASSWORD=password"
 
   exit 1
 fi
+
+# 환경변수 확인 로그
+echo "🔧 환경변수 확인:"
+echo "   JWT_SECRET: ${JWT_SECRET:0:10}..."
+echo "   DB_URL: ${DB_URL:-'NOT_SET'}"
+echo "   DB_USERNAME: ${DB_USERNAME:-'NOT_SET'}"
+echo "   DB_PASSWORD: ${DB_PASSWORD:0:3}***"
 
 # 모듈/포트 정의 (의존성 순서대로)
 MODULES=("fliqo-common" "fliqo-core-api" "fliqo-member-api" "fliqo-gateway")
@@ -98,7 +141,8 @@ start_module() {
 
   # gradlew는 리포트 루트에서 실행
   ( cd "$REPO_ROOT" && \
-    nohup "$GRADLE" ":$module:bootRun" --args="--spring.profiles.active=$PROFILE" \
+    nohup env JWT_SECRET="$JWT_SECRET" DB_URL="$DB_URL" DB_USERNAME="$DB_USERNAME" DB_PASSWORD="$DB_PASSWORD" \
+    "$GRADLE" ":$module:bootRun" --args="--spring.profiles.active=$PROFILE" \
     >"$log_file" 2>&1 & echo $! > "$pid_file" )
 
   echo "   ↳ 로그: $log_file / PID: $(cat "$pid_file")"
