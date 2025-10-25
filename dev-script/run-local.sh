@@ -17,6 +17,26 @@ GRADLE="$REPO_ROOT/gradlew"
 LOG_DIR="$SCRIPT_DIR/logs"
 KILL_BUSY_PORTS="${KILL_BUSY_PORTS:-1}"     # 1: 포트점유 프로세스 종료
 
+# ====== 환경변수 설정 ======
+# .env 파일이 있으면 로드
+if [[ -f "$REPO_ROOT/.env" ]]; then
+  echo "📄 .env 파일 로드 중..."
+  set -a  # 자동으로 export
+  source "$REPO_ROOT/.env"
+  set +a  # export 해제
+fi
+
+# JWT_SECRET이 설정되지 않았으면 경고
+if [[ -z "${JWT_SECRET:-}" ]]; then
+  echo "⚠️  JWT_SECRET이 설정되지 않았습니다"
+  echo "   다음 중 하나를 선택하세요:"
+  echo "   1. .env 파일에 JWT_SECRET=your-secret 추가"
+  echo "     - echo "JWT_SECRET=your-secret" > .env"
+  echo "   2. 터미널에서 export JWT_SECRET=your-secret 실행"
+
+  exit 1
+fi
+
 # 모듈/포트 정의 (의존성 순서대로)
 MODULES=("fliqo-common" "fliqo-core-api" "fliqo-member-api" "fliqo-gateway")
 port_of() {
