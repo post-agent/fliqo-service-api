@@ -71,6 +71,7 @@ public class PasswordResetService {
         return PasswordResetVerifyResult.of(resetToken.getToken(), RESET_TOKEN_TTL_SECONDS);
     }
 
+    @Transactional
     public void confirm(PasswordResetConfirmCommand passwordResetConfirmCmd) {
         var prt =
                 tokenRepository
