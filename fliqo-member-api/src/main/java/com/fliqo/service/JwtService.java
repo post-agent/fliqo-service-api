@@ -8,12 +8,11 @@ import java.util.UUID;
 
 import javax.crypto.SecretKey;
 
+import org.springframework.stereotype.Component;
+
 import com.fliqo.config.AuthProperties;
 import com.fliqo.jwt.JwtClaimKeys;
 import com.fliqo.jwt.JwtProperties;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.stereotype.Component;
-
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -42,15 +41,18 @@ public class JwtService {
         Instant now = Instant.now();
         Instant expirationTime = now.plus(authProperties.accessMin(), ChronoUnit.MINUTES);
 
-        String rolesClaim = jwtProperties.headerInjection() != null
-                && jwtProperties.headerInjection().rolesClaim() != null
-                && !jwtProperties.headerInjection().rolesClaim().isBlank()
-                ? jwtProperties.headerInjection().rolesClaim()
-                : JwtClaimKeys.ROLES;
+        String rolesClaim =
+                jwtProperties.headerInjection() != null
+                                && jwtProperties.headerInjection().rolesClaim() != null
+                                && !jwtProperties.headerInjection().rolesClaim().isBlank()
+                        ? jwtProperties.headerInjection().rolesClaim()
+                        : JwtClaimKeys.ROLES;
 
         return Jwts.builder()
                 .issuer(jwtProperties.issuer())
-                .audience().add(jwtProperties.audience()).and()
+                .audience()
+                .add(jwtProperties.audience())
+                .and()
                 .subject(subjectEmail)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expirationTime))

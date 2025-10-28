@@ -1,13 +1,11 @@
 package com.fliqo.exception;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 
-/**
- * 시스템 전체에서 사용하는 표준 에러 코드.
- * 필요에 따라 점진적으로 추가하여 사용.
- */
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+/** 시스템 전체에서 사용하는 표준 에러 코드. 필요에 따라 점진적으로 추가하여 사용. */
 @Getter
 @RequiredArgsConstructor
 public enum ErrorCode {
@@ -26,10 +24,10 @@ public enum ErrorCode {
     // ===== Resource Not Found (리소스 없음) =====
     RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "RESOURCE_001", "요청한 리소스를 찾을 수 없습니다."),
 
-    // 필요 시 아래와 같이 추가
-    // STORE_NOT_FOUND(HttpStatus.NOT_FOUND, "STORE_001", "매장을 찾을 수 없습니다."),
-    // MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER_001", "회원을 찾을 수 없습니다."),
-    ;
+// 필요 시 아래와 같이 추가
+// STORE_NOT_FOUND(HttpStatus.NOT_FOUND, "STORE_001", "매장을 찾을 수 없습니다."),
+// MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER_001", "회원을 찾을 수 없습니다."),
+;
 
     private final HttpStatus httpStatus;
     private final String code;

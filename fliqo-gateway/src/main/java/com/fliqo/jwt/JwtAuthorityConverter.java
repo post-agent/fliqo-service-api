@@ -1,13 +1,13 @@
 package com.fliqo.jwt;
 
+import java.util.*;
+import java.util.stream.Collectors;
+
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 @Component
 public class JwtAuthorityConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
@@ -21,10 +21,11 @@ public class JwtAuthorityConverter implements Converter<Jwt, Collection<GrantedA
     @Override
     public Collection<GrantedAuthority> convert(Jwt jwt) {
 
-        String rolesClaim = Optional.ofNullable(props.headerInjection())
-                .map(JwtProperties.HeaderInjection::rolesClaim)
-                .filter(s -> !s.isBlank())
-                .orElse(JwtClaimKeys.ROLES);
+        String rolesClaim =
+                Optional.ofNullable(props.headerInjection())
+                        .map(JwtProperties.HeaderInjection::rolesClaim)
+                        .filter(s -> !s.isBlank())
+                        .orElse(JwtClaimKeys.ROLES);
 
         Object rolesObj = jwt.getClaim(rolesClaim);
 
@@ -43,9 +44,7 @@ public class JwtAuthorityConverter implements Converter<Jwt, Collection<GrantedA
         if (rolesObj instanceof Collection<?> col) {
             tokens = col.stream().map(String::valueOf).toList();
         } else if (rolesObj instanceof String s) {
-            tokens = Arrays.stream(s.split("[,\\s]+"))
-                    .filter(t -> !t.isBlank())
-                    .toList();
+            tokens = Arrays.stream(s.split("[,\\s]+")).filter(t -> !t.isBlank()).toList();
         } else {
             tokens = List.of();
         }

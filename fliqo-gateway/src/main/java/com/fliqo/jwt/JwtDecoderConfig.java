@@ -1,7 +1,9 @@
 package com.fliqo.jwt;
 
-import io.jsonwebtoken.io.Decoders;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import java.util.Objects;
+
+import javax.crypto.spec.SecretKeySpec;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
@@ -11,9 +13,7 @@ import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.*;
 
-
-import javax.crypto.spec.SecretKeySpec;
-import java.util.Objects;
+import io.jsonwebtoken.io.Decoders;
 
 @Configuration
 public class JwtDecoderConfig {
@@ -28,10 +28,10 @@ public class JwtDecoderConfig {
         byte[] keyBytes = Decoders.BASE64.decode(props.secret());
         var secretKey = new SecretKeySpec(keyBytes, "HmacSHA256");
 
-        NimbusReactiveJwtDecoder decoder = NimbusReactiveJwtDecoder
-                .withSecretKey(secretKey)
-                .macAlgorithm(MacAlgorithm.HS256)
-                .build();
+        NimbusReactiveJwtDecoder decoder =
+                NimbusReactiveJwtDecoder.withSecretKey(secretKey)
+                        .macAlgorithm(MacAlgorithm.HS256)
+                        .build();
 
         OAuth2TokenValidator<Jwt> withIssuer =
                 JwtValidators.createDefaultWithIssuer(props.issuer());
@@ -42,23 +42,23 @@ public class JwtDecoderConfig {
         return decoder;
     }
 
-    private OAuth2TokenValidator<Jwt> getJwtOAuth2TokenValidator(OAuth2TokenValidator<Jwt> withIssuer) {
-        OAuth2TokenValidator<Jwt> withAudience = token -> {
-            var audiences = token.getAudience();
-            if (audiences == null || audiences.stream().noneMatch(a -> Objects.equals(a, props.audience()))) {
-                return OAuth2TokenValidatorResult.failure(
-                        new OAuth2Error(
-                                "invalid_token",
-                                "필수 audience 값이 누락되었습니다: " + props.audience(),
-                                null
-                        )
-                );
-            }
-            return OAuth2TokenValidatorResult.success();
-        };
+    private OAuth2TokenValidator<Jwt> getJwtOAuth2TokenValidator(
+            OAuth2TokenValidator<Jwt> withIssuer) {
+        OAuth2TokenValidator<Jwt> withAudience =
+                token -> {
+                    var audiences = token.getAudience();
+                    if (audiences == null
+                            || audiences.stream()
+                                    .noneMatch(a -> Objects.equals(a, props.audience()))) {
+                        return OAuth2TokenValidatorResult.failure(
+                                new OAuth2Error(
+                                        "invalid_token",
+                                        "필수 audience 값이 누락되었습니다: " + props.audience(),
+                                        null));
+                    }
+                    return OAuth2TokenValidatorResult.success();
+                };
 
-        return new DelegatingOAuth2TokenValidator<>(
-                withIssuer, withAudience
-        );
+        return new DelegatingOAuth2TokenValidator<>(withIssuer, withAudience);
     }
 }

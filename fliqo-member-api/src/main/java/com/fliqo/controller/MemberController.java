@@ -1,28 +1,23 @@
 package com.fliqo.controller;
 
+import java.util.Map;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.fliqo.controller.dto.request.*;
 import com.fliqo.controller.dto.response.*;
 import com.fliqo.service.MemberService;
+import com.fliqo.service.PasswordResetService;
 import com.fliqo.service.PhoneVerificationService;
-import com.fliqo.service.dto.request.EmailCheckCommand;
-import com.fliqo.service.dto.request.PhoneVerificationConfirmCommand;
-import com.fliqo.service.dto.request.PhoneVerificationStartCommand;
-import com.fliqo.service.dto.request.SignupCommand;
-import com.fliqo.service.dto.response.EmailCheckResult;
-import com.fliqo.service.dto.response.PhoneVerificationConfirmResult;
-import com.fliqo.service.dto.response.PhoneVerificationStartResult;
-import com.fliqo.service.dto.response.SignupResult;
+import com.fliqo.service.dto.request.*;
+import com.fliqo.service.dto.response.*;
 import com.fliqo.service.validator.MemberPolicyValidator;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.server.ResponseStatusException;
-
-import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -31,6 +26,7 @@ public class MemberController {
     private final MemberService memberService;
     private final PhoneVerificationService phoneVerificationService;
     private final MemberPolicyValidator memberPolicyValidator;
+    private final PasswordResetService passwordResetService;
 
     @PostMapping("/email-check")
     public ResponseEntity<ApiResponse<EmailCheckResponse>> check(
@@ -107,14 +103,43 @@ public class MemberController {
     @GetMapping("/me")
     public Map<String, Object> me(
             @RequestHeader(value = "X-User-Id", required = false) String userId,
-            @RequestHeader(value = "X-User-Roles", required = false) String rolesCsv
-    ) {
+            @RequestHeader(value = "X-User-Roles", required = false) String rolesCsv) {
         if (userId == null || userId.isBlank()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing X-User-Id");
         }
         return Map.of(
                 "userId", userId,
-                "roles", rolesCsv
-        );
+                "roles", rolesCsv);
+    }
+
+    @PostMapping("/password/reset/request")
+    public ResponseEntity<ApiResponse<PasswordResetStartResult>> requestPasswordReset(
+            @Valid @RequestBody PasswordResetRequest passwordResetRequest) {
+        PasswordResetStartResult passwordResetStartResult =
+                passwordResetService.start(
+                        PasswordResetStartCommand.of(
+                                passwordResetRequest.email(), passwordResetRequest.phoneNumber()));
+        return ResponseEntity.ok(ApiResponse.ok(passwordResetStartResult));
+    }
+
+    @PostMapping("/password/reset/verify")
+    public ResponseEntity<ApiResponse<PasswordResetVerifyResult>> verifyPhoneCode(
+            @Valid @RequestBody PasswordResetVerifyRequest passwordResetVerifyRequest) {
+        PasswordResetVerifyResult passwordResetVerifyResult =
+                passwordResetService.verify(
+                        PasswordResetVerifyCommand.of(
+                                passwordResetVerifyRequest.verificationId(),
+                                passwordResetVerifyRequest.code()));
+        return ResponseEntity.ok(ApiResponse.ok(passwordResetVerifyResult));
+    }
+
+    @PostMapping("/password/reset/confirm")
+    public ResponseEntity<ApiResponse<String>> confirmPasswordReset(
+            @Valid @RequestBody PasswordResetConfirmRequest passwordResetConfirmRequest) {
+        passwordResetService.confirm(
+                PasswordResetConfirmCommand.of(
+                        passwordResetConfirmRequest.resetToken(),
+                        passwordResetConfirmRequest.newPassword()));
+        return ResponseEntity.ok(ApiResponse.ok("새로운 비밀번호로 변경되었습니다."));
     }
 }
