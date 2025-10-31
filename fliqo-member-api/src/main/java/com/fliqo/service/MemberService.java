@@ -2,8 +2,6 @@ package com.fliqo.service;
 
 import java.util.List;
 
-import com.fliqo.exception.ErrorCode;
-import com.fliqo.exception.UnauthorizedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,7 +13,8 @@ import com.fliqo.domain.entity.MemberCredential;
 import com.fliqo.domain.entity.PhoneVerification;
 import com.fliqo.domain.repository.MemberCredentialRepository;
 import com.fliqo.domain.repository.MemberRepository;
-
+import com.fliqo.exception.ErrorCode;
+import com.fliqo.exception.UnauthorizedException;
 import com.fliqo.service.dto.request.EmailCheckCommand;
 import com.fliqo.service.dto.request.SignupCommand;
 import com.fliqo.service.dto.response.EmailCheckResult;
@@ -176,12 +175,16 @@ public class MemberService {
      */
     private Member verifyCredential(String email, String rawPassword) {
         Member member =
-                memberRepository.findByEmail(email).orElseThrow(() -> new UnauthorizedException(ErrorCode.INVALID_CREDENTIALS));
+                memberRepository
+                        .findByEmail(email)
+                        .orElseThrow(
+                                () -> new UnauthorizedException(ErrorCode.INVALID_CREDENTIALS));
 
         MemberCredential memberCredential =
                 credentialRepository
                         .findByMemberId(member.getId())
-                        .orElseThrow(() -> new UnauthorizedException(ErrorCode.INVALID_CREDENTIALS));
+                        .orElseThrow(
+                                () -> new UnauthorizedException(ErrorCode.INVALID_CREDENTIALS));
 
         if (!passwordEncoder.matches(rawPassword, memberCredential.getPasswordHash())) {
             throw new UnauthorizedException(ErrorCode.INVALID_CREDENTIALS);

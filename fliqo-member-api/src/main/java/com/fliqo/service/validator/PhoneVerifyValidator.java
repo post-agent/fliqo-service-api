@@ -1,12 +1,11 @@
 package com.fliqo.service.validator;
 
-import com.fliqo.exception.ErrorCode;
-import com.fliqo.exception.BadRequestException;
 import org.springframework.stereotype.Component;
 
 import com.fliqo.domain.entity.PhoneVerification;
 import com.fliqo.domain.repository.PhoneVerificationRepository;
-
+import com.fliqo.exception.BadRequestException;
+import com.fliqo.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,7 +22,9 @@ public class PhoneVerifyValidator {
      * @throws com.fliqo.exception.BadRequestException 세션이 존재하지 않는 경우
      */
     public PhoneVerification mustExist(String verificationId) {
-        return repository.findById(verificationId).orElseThrow(() -> new BadRequestException(ErrorCode.PHONE_VERIFY_INVALID_REQUEST));
+        return repository
+                .findById(verificationId)
+                .orElseThrow(() -> new BadRequestException(ErrorCode.PHONE_VERIFY_INVALID_REQUEST));
     }
 
     /**

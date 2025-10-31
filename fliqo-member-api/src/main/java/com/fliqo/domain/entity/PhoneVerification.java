@@ -4,10 +4,8 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
-
-import com.fliqo.exception.ErrorCode;
 import com.fliqo.exception.BadRequestException;
-
+import com.fliqo.exception.ErrorCode;
 import com.fliqo.util.UuidUtil;
 
 import jakarta.persistence.*;

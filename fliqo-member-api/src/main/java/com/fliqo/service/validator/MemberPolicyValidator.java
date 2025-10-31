@@ -2,11 +2,11 @@ package com.fliqo.service.validator;
 
 import java.util.regex.Pattern;
 
-import com.fliqo.exception.ErrorCode;
-import com.fliqo.exception.BadRequestException;
 import org.springframework.stereotype.Component;
 
 import com.fliqo.domain.repository.MemberRepository;
+import com.fliqo.exception.BadRequestException;
+import com.fliqo.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 
@@ -18,8 +18,8 @@ public class MemberPolicyValidator {
     /**
      * 주어진 이메일이 회원가입에 사용 가능한지(중복되지 않는지) 검증합니다.
      *
-     * <p>이미 동일한 이메일을 가진 회원이 존재하면 {@link ErrorCode#EMAIL_ALREADY_EXISTS} 예외를 발생시켜 가입 절차를 중단합니다.
-     * 존재하지 않으면 아무 동작 없이 반환됩니다.
+     * <p>이미 동일한 이메일을 가진 회원이 존재하면 {@link ErrorCode#EMAIL_ALREADY_EXISTS} 예외를 발생시켜 가입 절차를 중단합니다. 존재하지
+     * 않으면 아무 동작 없이 반환됩니다.
      *
      * @param email 중복 여부를 확인할 이메일(사전 검증/정규화된 값)
      * @throws com.fliqo.exception.BadRequestException 이미 사용 중인 이메일인 경우

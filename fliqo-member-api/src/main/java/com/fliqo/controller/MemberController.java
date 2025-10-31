@@ -1,12 +1,11 @@
 package com.fliqo.controller;
 
-
-import com.fliqo.dto.CommonResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.fliqo.controller.dto.request.*;
 import com.fliqo.controller.dto.response.*;
+import com.fliqo.dto.CommonResponse;
 import com.fliqo.service.MemberService;
 import com.fliqo.service.PasswordResetService;
 import com.fliqo.service.PhoneVerificationService;

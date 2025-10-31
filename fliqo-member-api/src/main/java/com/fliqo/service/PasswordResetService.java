@@ -6,14 +6,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.fliqo.exception.ErrorCode;
-import com.fliqo.exception.BadRequestException;
 import com.fliqo.domain.entity.Member;
 import com.fliqo.domain.entity.PasswordResetToken;
 import com.fliqo.domain.entity.PhoneVerification;
 import com.fliqo.domain.repository.MemberCredentialRepository;
 import com.fliqo.domain.repository.MemberRepository;
 import com.fliqo.domain.repository.PasswordResetTokenRepository;
+import com.fliqo.exception.BadRequestException;
+import com.fliqo.exception.ErrorCode;
 import com.fliqo.service.dto.request.*;
 import com.fliqo.service.dto.response.PasswordResetStartResult;
 import com.fliqo.service.dto.response.PasswordResetVerifyResult;
@@ -38,7 +38,8 @@ public class PasswordResetService {
         var member =
                 memberRepository
                         .findByEmail(passwordResetStartCmd.email())
-                        .orElseThrow(() -> new BadRequestException(ErrorCode.RESET_INVALID_REQUEST));
+                        .orElseThrow(
+                                () -> new BadRequestException(ErrorCode.RESET_INVALID_REQUEST));
         if (!member.getPhone().equals(passwordResetStartCmd.phoneNumber())) {
             throw new BadRequestException(ErrorCode.RESET_INVALID_REQUEST);
         }
@@ -63,8 +64,8 @@ public class PasswordResetService {
         Member member =
                 memberRepository
                         .findByPhone(phoneVerification.getPhoneNumber())
-
-                        .orElseThrow(() -> new BadRequestException(ErrorCode.RESET_INVALID_REQUEST));
+                        .orElseThrow(
+                                () -> new BadRequestException(ErrorCode.RESET_INVALID_REQUEST));
 
         var resetToken = PasswordResetToken.issue(member.getId(), RESET_TOKEN_TTL_SECONDS);
         tokenRepository.save(resetToken);
@@ -88,7 +89,8 @@ public class PasswordResetService {
         var credential =
                 credentialRepository
                         .findByMemberId(prt.getMemberId())
-                        .orElseThrow(() -> new BadRequestException(ErrorCode.RESET_INVALID_REQUEST));
+                        .orElseThrow(
+                                () -> new BadRequestException(ErrorCode.RESET_INVALID_REQUEST));
 
         credential.changePassword(passwordEncoder.encode(passwordResetConfirmCmd.newPassword()));
     }

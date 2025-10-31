@@ -27,7 +27,8 @@ public enum ErrorCode {
 
     // ===== Member (회원) =====
     EMAIL_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "MEMBER_001", "이미 가입된 이메일입니다."),
-    PASSWORD_POLICY_VIOLATION(HttpStatus.BAD_REQUEST, "MEMBER_002", "비밀번호는 8자 이상이며 영문, 숫자, 특수문자를 모두 포함해야 합니다."),
+    PASSWORD_POLICY_VIOLATION(
+            HttpStatus.BAD_REQUEST, "MEMBER_002", "비밀번호는 8자 이상이며 영문, 숫자, 특수문자를 모두 포함해야 합니다."),
     PASSWORD_MISMATCH(HttpStatus.BAD_REQUEST, "MEMBER_003", "비밀번호와 비밀번호 확인이 일치하지 않습니다."),
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER_004", "회원을 찾을 수 없습니다."),
 
@@ -38,16 +39,14 @@ public enum ErrorCode {
     PHONE_VERIFY_ATTEMPTS_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "PHONE_004", "인증 시도 횟수를 초과했습니다."),
     PHONE_VERIFY_CODE_MISMATCH(HttpStatus.BAD_REQUEST, "PHONE_005", "인증 코드가 올바르지 않습니다."),
     PHONE_VERIFY_NOT_COMPLETED(HttpStatus.BAD_REQUEST, "PHONE_006", "휴대폰 인증이 완료되지 않았습니다."),
-    PHONE_VERIFY_PHONE_MISMATCH(HttpStatus.BAD_REQUEST, "PHONE_007", "인증된 휴대폰 번호와 제출된 번호가 일치하지 않습니다."),
-
+    PHONE_VERIFY_PHONE_MISMATCH(
+            HttpStatus.BAD_REQUEST, "PHONE_007", "인증된 휴대폰 번호와 제출된 번호가 일치하지 않습니다."),
 
     // ===== password reset =====
     RESET_INVALID_REQUEST(HttpStatus.BAD_REQUEST, "RESET_001", "회원 정보를 찾을 수 없습니다."),
     RESET_TOKEN_INVALID(HttpStatus.BAD_REQUEST, "RESET_002", "비밀번호 재설정 토큰이 유효하지 않습니다."),
     RESET_TOKEN_EXPIRED(HttpStatus.BAD_REQUEST, "RESET_003", "비밀번호 재설정 토큰이 만료되었거나 이미 사용되었습니다."),
     ;
-
-
 
     private final HttpStatus httpStatus;
     private final String code;
