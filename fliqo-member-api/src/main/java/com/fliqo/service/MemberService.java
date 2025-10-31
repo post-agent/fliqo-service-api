@@ -2,6 +2,8 @@ package com.fliqo.service;
 
 import java.util.List;
 
+import com.fliqo.exception.ErrorCode;
+import com.fliqo.exception.UnauthorizedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,7 +15,7 @@ import com.fliqo.domain.entity.MemberCredential;
 import com.fliqo.domain.entity.PhoneVerification;
 import com.fliqo.domain.repository.MemberCredentialRepository;
 import com.fliqo.domain.repository.MemberRepository;
-import com.fliqo.exception.MemberError;
+
 import com.fliqo.service.dto.request.EmailCheckCommand;
 import com.fliqo.service.dto.request.SignupCommand;
 import com.fliqo.service.dto.response.EmailCheckResult;
@@ -134,7 +136,7 @@ public class MemberService {
      * @param email 로그인 이메일
      * @param rawPassword 평문 비밀번호
      * @return 액세스 토큰과 만료 시간을 담은 TokenResponseDto
-     * @throws com.fliqo.exception.MemberException 자격 증명 검증 실패 시
+     * @throws com.fliqo.exception.UnauthorizedException 자격 증명 검증 실패 시
      */
     @Transactional
     public TokenResponseDto login(String email, String rawPassword) {
@@ -159,12 +161,10 @@ public class MemberService {
     /**
      * 로그인에 필요한 자격 증명(이메일 존재, 비밀번호 일치)을 검증합니다.
      *
-     * <p>다음 경우 {@link com.fliqo.exception.MemberException}을 던집니다:
+     * <p>다음 경우 {@link com.fliqo.exception.UnauthorizedException}을 던집니다:
      *
      * <ul>
-     *   <li>{@link com.fliqo.exception.MemberError#MEMBER_NOT_FOUND} - 이메일로 회원 없음
-     *   <li>{@link com.fliqo.exception.MemberError#CREDENTIAL_NOT_FOUND} - 자격 증명 없음
-     *   <li>{@link com.fliqo.exception.MemberError#INVALID_PASSWORD} - 비밀번호 불일치
+     *   <li>{@link ErrorCode#INVALID_CREDENTIALS} - 이메일 또는 비밀번호가 올바르지 않음
      * </ul>
      *
      * 검증 성공 시 {@link Member}를 반환합니다.
@@ -172,19 +172,19 @@ public class MemberService {
      * @param email 로그인 이메일
      * @param rawPassword 평문 비밀번호
      * @return 검증된 {@link Member}
-     * @throws com.fliqo.exception.MemberException 위의 경우들
+     * @throws com.fliqo.exception.UnauthorizedException 인증 실패 시
      */
     private Member verifyCredential(String email, String rawPassword) {
         Member member =
-                memberRepository.findByEmail(email).orElseThrow(MemberError.MEMBER_NOT_FOUND);
+                memberRepository.findByEmail(email).orElseThrow(() -> new UnauthorizedException(ErrorCode.INVALID_CREDENTIALS));
 
         MemberCredential memberCredential =
                 credentialRepository
                         .findByMemberId(member.getId())
-                        .orElseThrow(MemberError.CREDENTIAL_NOT_FOUND);
+                        .orElseThrow(() -> new UnauthorizedException(ErrorCode.INVALID_CREDENTIALS));
 
         if (!passwordEncoder.matches(rawPassword, memberCredential.getPasswordHash())) {
-            throw MemberError.INVALID_PASSWORD.get();
+            throw new UnauthorizedException(ErrorCode.INVALID_CREDENTIALS);
         }
 
         return member;
