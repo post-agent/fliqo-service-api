@@ -4,7 +4,10 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
-import com.fliqo.exception.PhoneVerifyError;
+
+import com.fliqo.exception.ErrorCode;
+import com.fliqo.exception.BadRequestException;
+
 import com.fliqo.util.UuidUtil;
 
 import jakarta.persistence.*;
@@ -130,26 +133,27 @@ public class PhoneVerification {
      * </ol>
      *
      * @param inputCode 사용자가 제출한 인증 코드
-     * @throws RuntimeException 만료, 상태 부적합, 시도 횟수 초과, 코드 불일치 등 {@link PhoneVerifyError}에 대응하는 런타임
-     *     예외가 발생합니다.
+     * @throws com.fliqo.exception.BadRequestException 만료, 상태 부적합, 시도 횟수 초과, 코드 불일치 등
      */
     public void verify(String inputCode) {
         if (isExpired()) {
             markExpired();
-            throw PhoneVerifyError.EXPIRED.get();
+            throw new BadRequestException(ErrorCode.PHONE_VERIFY_EXPIRED);
         }
+
         if (!isPending()) {
-            throw PhoneVerifyError.ALREADY_PROCESSED.get();
+            throw new BadRequestException(ErrorCode.PHONE_VERIFY_ALREADY_PROCESSED);
         }
+
         if (this.attempts >= MAX_ATTEMPTS) {
             markExpired();
-            throw PhoneVerifyError.ATTEMPTS_EXCEEDED.get();
+            throw new BadRequestException(ErrorCode.PHONE_VERIFY_ATTEMPTS_EXCEEDED);
         }
 
         this.attempts += 1;
 
         if (!Objects.equals(this.code, inputCode)) {
-            throw PhoneVerifyError.CODE_MISMATCH.get();
+            throw new BadRequestException(ErrorCode.PHONE_VERIFY_CODE_MISMATCH);
         }
 
         this.status = PhoneStatus.VERIFIED;
@@ -157,10 +161,10 @@ public class PhoneVerification {
         this.verificationToken = UUID.randomUUID().toString();
     }
 
-    /** 제출 번호가 이 인증 세션의 저장 번호와 일치하는지 확인합니다. 일치하지 않으면 PHONE_MISMATCH 예외를 던집니다. */
+    /** 제출 번호가 이 인증 세션의 저장 번호와 일치하는지 확인합니다. 일치하지 않으면 PHONE_VERIFY_PHONE_MISMATCH 예외를 던집니다. */
     public void assertPhoneMatches(String submittedPhoneNumber) {
         if (!Objects.equals(this.phoneNumber, submittedPhoneNumber)) {
-            throw PhoneVerifyError.PHONE_MISMATCH.get();
+            throw new BadRequestException(ErrorCode.PHONE_VERIFY_PHONE_MISMATCH);
         }
     }
 }
