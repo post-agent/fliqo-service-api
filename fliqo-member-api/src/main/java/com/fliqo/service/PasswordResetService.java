@@ -12,6 +12,8 @@ import com.fliqo.domain.entity.PhoneVerification;
 import com.fliqo.domain.repository.MemberCredentialRepository;
 import com.fliqo.domain.repository.MemberRepository;
 import com.fliqo.domain.repository.PasswordResetTokenRepository;
+import com.fliqo.exception.BadRequestException;
+import com.fliqo.exception.ErrorCode;
 import com.fliqo.service.dto.request.*;
 import com.fliqo.service.dto.response.PasswordResetStartResult;
 import com.fliqo.service.dto.response.PasswordResetVerifyResult;
@@ -36,9 +38,10 @@ public class PasswordResetService {
         var member =
                 memberRepository
                         .findByEmail(passwordResetStartCmd.email())
-                        .orElseThrow(() -> new IllegalArgumentException("등록되지 않은 이메일입니다."));
+                        .orElseThrow(
+                                () -> new BadRequestException(ErrorCode.RESET_INVALID_REQUEST));
         if (!member.getPhone().equals(passwordResetStartCmd.phoneNumber())) {
-            throw new IllegalArgumentException("등록된 휴대전화와 일치하지 않습니다.");
+            throw new BadRequestException(ErrorCode.RESET_INVALID_REQUEST);
         }
 
         PhoneVerificationStartResult result =
@@ -61,7 +64,8 @@ public class PasswordResetService {
         Member member =
                 memberRepository
                         .findByPhone(phoneVerification.getPhoneNumber())
-                        .orElseThrow(() -> new IllegalArgumentException("회원 정보를 찾을 수 없습니다."));
+                        .orElseThrow(
+                                () -> new BadRequestException(ErrorCode.RESET_INVALID_REQUEST));
 
         var resetToken = PasswordResetToken.issue(member.getId(), RESET_TOKEN_TTL_SECONDS);
         tokenRepository.save(resetToken);
@@ -76,16 +80,17 @@ public class PasswordResetService {
         var prt =
                 tokenRepository
                         .findByToken(passwordResetConfirmCmd.resetToken())
-                        .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 요청입니다."));
+                        .orElseThrow(() -> new BadRequestException(ErrorCode.RESET_TOKEN_INVALID));
 
         if (!prt.isUsable(Instant.now())) {
-            throw new IllegalArgumentException("만료되었거나 이미 사용된 토큰입니다.");
+            throw new BadRequestException(ErrorCode.RESET_TOKEN_EXPIRED);
         }
 
         var credential =
                 credentialRepository
                         .findByMemberId(prt.getMemberId())
-                        .orElseThrow(() -> new IllegalArgumentException("자격 증명을 찾을 수 없습니다."));
+                        .orElseThrow(
+                                () -> new BadRequestException(ErrorCode.RESET_INVALID_REQUEST));
 
         credential.changePassword(passwordEncoder.encode(passwordResetConfirmCmd.newPassword()));
     }
