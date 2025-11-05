@@ -9,6 +9,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.fliqo.controller.dto.request.*;
 import com.fliqo.controller.dto.response.*;
+import com.fliqo.service.EmailFindService;
 import com.fliqo.service.MemberService;
 import com.fliqo.service.PasswordResetService;
 import com.fliqo.service.PhoneVerificationService;
@@ -27,6 +28,7 @@ public class MemberController {
     private final PhoneVerificationService phoneVerificationService;
     private final MemberPolicyValidator memberPolicyValidator;
     private final PasswordResetService passwordResetService;
+    private final EmailFindService emailFindService;
 
     @PostMapping("/email-check")
     public ResponseEntity<ApiResponse<EmailCheckResponse>> check(
@@ -64,6 +66,39 @@ public class MemberController {
                 ApiResponse.ok(
                         PhoneVerifyConfirmResponse.of(
                                 phoneVerificationConfirmResult.verificationToken())));
+    }
+
+    @PostMapping("/email/find/request")
+    public ResponseEntity<ApiResponse<EmailFindStartResponse>> requestEmailFind(
+            @Valid @RequestBody EmailFindStartRequest emailFindStartRequest) {
+        EmailFindStartResult emailFindStartResult =
+                emailFindService.start(EmailFindStartCommand.of(emailFindStartRequest.phoneNumber()));
+
+        return ResponseEntity.ok(
+                ApiResponse.ok(
+                        EmailFindStartResponse.of(
+                                emailFindStartResult.verificationId(),
+                                emailFindStartResult.expiresInMinutes())));
+    }
+
+    @PostMapping("/email/find/verify")
+    public ResponseEntity<ApiResponse<EmailFindVerifyResponse>> verifyEmailFind(
+            @Valid @RequestBody EmailFindVerifyRequest emailFindVerifyRequest) {
+        EmailFindResult emailFindResult =
+                emailFindService.verify(
+                        EmailFindVerifyCommand.of(
+                                emailFindVerifyRequest.verificationId(),
+                                emailFindVerifyRequest.code()));
+
+        String message =
+                emailFindResult.found()
+                        ? String.format("등록된 이메일은 %s 입니다.", emailFindResult.maskedEmail())
+                        : "등록된 회원정보가 없습니다.";
+
+        return ResponseEntity.ok(
+                ApiResponse.ok(
+                        EmailFindVerifyResponse.of(
+                                emailFindResult.found(), emailFindResult.maskedEmail(), message)));
     }
 
     @PostMapping("/signup")
