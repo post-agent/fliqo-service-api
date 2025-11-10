@@ -20,7 +20,7 @@ public class OpenApiConfig {
         final String SCHEME = "bearerAuth";
 
         return new OpenAPI()
-                // 게이트웨이를 경유해 호출되도록 서버 URL을 gateway로 지정 (로컬 기준)
+                // 게이트웨이를 경유해 호출되도록 서버 URL을 gateway로 지정
                 .servers(
                         List.of(
                                 new Server()
