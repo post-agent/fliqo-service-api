@@ -1,16 +1,20 @@
 package com.fliqo.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fliqo.domain.entity.*;
+import com.fliqo.exception.BadRequestException;
+import com.fliqo.service.dto.request.EmailFindConfirmCommand;
+import com.fliqo.service.dto.request.PhoneVerificationConfirmCommand;
+import com.fliqo.service.dto.response.EmailFindConfirmResult;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fliqo.config.AuthProperties;
 import com.fliqo.controller.dto.response.TokenResponseDto;
-import com.fliqo.domain.entity.Member;
-import com.fliqo.domain.entity.MemberCredential;
-import com.fliqo.domain.entity.PhoneVerification;
 import com.fliqo.domain.repository.MemberCredentialRepository;
 import com.fliqo.domain.repository.MemberRepository;
 import com.fliqo.exception.ErrorCode;
@@ -24,6 +28,7 @@ import com.fliqo.util.UuidUtil;
 
 import lombok.RequiredArgsConstructor;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MemberService {
@@ -51,12 +56,22 @@ public class MemberService {
      */
     @Transactional
     public SignupResult signup(SignupCommand signupCmd) {
+        log.info("Step 1: Validate email");
         validateSignupRequest(signupCmd);
+
+        log.info("Step 2: Verify phone");
         PhoneVerification phoneVerification = verifyPhone(signupCmd);
+
+        log.info("Step 3: Create member");
         Member member = createMember(signupCmd);
+
+        log.info("Step 4: Create credential");
         createCredential(member, signupCmd.rawPassword());
+
+        log.info("Step 5: Consume token");
         phoneVerificationService.consumeToken(phoneVerification);
 
+        log.info("Step 6: Build result");
         return buildSignupResult(member);
     }
 
@@ -91,14 +106,29 @@ public class MemberService {
      * @return 저장된 Member 엔티티
      */
     private Member createMember(SignupCommand signupCmd) {
-        Member member =
-                Member.builder()
-                        .memberUuid(UuidUtil.newUuid())
-                        .email(signupCmd.email())
-                        .name(signupCmd.name())
-                        .phone(signupCmd.phoneNumber())
-                        .build();
-        return memberRepository.save(member);
+        log.info("=== Step 3 시작 ===");
+        Member member = Member.builder()
+                .memberUuid(UuidUtil.newUuid())
+                .email(signupCmd.email())
+                .name(signupCmd.name())
+                .phone(signupCmd.phoneNumber())
+                .role(Role.USER)
+                .status(MemberStatus.ACTIVE)
+                .emailVerified(false)
+                .phoneVerified(false)
+                .ownerVerified(false)
+                .onboardingStep((short) 0)
+                .locale("ko-KR")
+                .build();
+
+        log.info("Member 객체 생성 완료, 저장 시작...");
+        Member savedMember = memberRepository.save(member);
+        log.info("save() 호출 완료, ID: {}", savedMember.getId());
+
+        memberRepository.flush();  // ✅ 추가
+        log.info("flush() 완료, ID: {}", savedMember.getId());
+
+        return savedMember;
     }
 
     /**
@@ -108,9 +138,34 @@ public class MemberService {
      * @param rawPassword 암호화되지 않은 평문 비밀번호
      */
     private void createCredential(Member member, String rawPassword) {
+        log.info("=== Step 4 시작 ===");
+        log.info("Member ID: {}", member.getId());
+        log.info("Member UUID: {}", member.getMemberUuid());
+        log.info("Member Email: {}", member.getEmail());
+
+        if (member.getId() == null) {
+            log.error("❌❌❌ Member ID is NULL! Member was not flushed! ❌❌❌");
+        }
+
+        log.info("Password encoding 시작...");
+        long startTime = System.currentTimeMillis();
         String hash = passwordEncoder.encode(rawPassword);
-        MemberCredential credential = MemberCredential.createNew(member, hash);
+        long endTime = System.currentTimeMillis();
+        log.info("Password encoding 완료. 소요시간: {}ms", (endTime - startTime));
+
+        log.info("MemberCredential 객체 생성 중...");
+        MemberCredential credential = MemberCredential.builder()
+                .member(member)
+                .passwordHash(hash)
+                .passwordAlgo(PasswordAlgo.BCRYPT)
+                .failedLoginAttempts(0)
+                .passwordChangedAt(LocalDateTime.now())
+                .build();
+        log.info("MemberCredential 객체 생성 완료");
+
+        log.info("DB 저장 시작...");
         credentialRepository.save(credential);
+        log.info("DB 저장 완료!");
     }
 
     /**
@@ -200,5 +255,37 @@ public class MemberService {
      */
     private long calculateExpirationSeconds() {
         return authProperties.accessMin() * 60;
+    }
+
+    @Transactional
+    public EmailFindConfirmResult emailFindByPhone(EmailFindConfirmCommand emailFindConfirmCommand) {
+        PhoneVerification phoneVerification =
+                phoneVerificationService.verifyAndGet(
+                        PhoneVerificationConfirmCommand.of(
+                                emailFindConfirmCommand.verificationId(),
+                                emailFindConfirmCommand.code()));
+
+        Member member =
+                memberRepository.findByPhone(phoneVerification.getPhoneNumber())
+                        .orElseThrow(()-> new BadRequestException(ErrorCode.MEMBER_NOT_FOUND));
+
+        return EmailFindConfirmResult.of(maskEmail(member.getEmail()));
+    }
+
+    private String maskEmail(String email) {
+        int atIndex = email.indexOf('@');
+        if (atIndex <= 0) {
+            return "**";
+        }
+
+        String localPart = email.substring(0, atIndex);
+        String domainPart = email.substring(atIndex + 1);
+
+        if (localPart.length() <= 2) {
+            return "**@" + domainPart;
+        }
+
+        String visiblePrefix = localPart.substring(0, 2);
+        return visiblePrefix + "**@" + domainPart;
     }
 }
