@@ -42,8 +42,7 @@ public class MemberController {
                 phoneVerificationService.start(
                         PhoneVerificationStartCommand.of(
                                 phoneVerifyStartRequest.phoneNumber(),
-                                phoneVerifyStartRequest.purpose()
-                        ));
+                                phoneVerifyStartRequest.purpose()));
         return ResponseEntity.ok(
                 CommonResponse.success(
                         PhoneVerifyRequestResponse.of(
@@ -108,8 +107,7 @@ public class MemberController {
                         PasswordResetStartCommand.of(
                                 passwordResetStartRequest.email(),
                                 passwordResetStartRequest.phoneNumber(),
-                                passwordResetStartRequest.purpose()
-                                ));
+                                passwordResetStartRequest.purpose()));
         return ResponseEntity.ok(CommonResponse.success(passwordResetStartResult));
     }
 
@@ -141,8 +139,7 @@ public class MemberController {
                 phoneVerificationService.start(
                         PhoneVerificationStartCommand.of(
                                 phoneVerifyStartRequest.phoneNumber(),
-                                phoneVerifyStartRequest.purpose()
-                        ));
+                                phoneVerifyStartRequest.purpose()));
 
         return ResponseEntity.ok(
                 CommonResponse.success(

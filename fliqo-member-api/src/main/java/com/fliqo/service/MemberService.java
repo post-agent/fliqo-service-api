@@ -3,30 +3,30 @@ package com.fliqo.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.fliqo.domain.entity.*;
-import com.fliqo.exception.BadRequestException;
-import com.fliqo.service.dto.request.EmailFindConfirmCommand;
-import com.fliqo.service.dto.request.PhoneVerificationConfirmCommand;
-import com.fliqo.service.dto.response.EmailFindConfirmResult;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fliqo.config.AuthProperties;
 import com.fliqo.controller.dto.response.TokenResponseDto;
+import com.fliqo.domain.entity.*;
 import com.fliqo.domain.repository.MemberCredentialRepository;
 import com.fliqo.domain.repository.MemberRepository;
+import com.fliqo.exception.BadRequestException;
 import com.fliqo.exception.ErrorCode;
 import com.fliqo.exception.UnauthorizedException;
 import com.fliqo.service.dto.request.EmailCheckCommand;
+import com.fliqo.service.dto.request.EmailFindConfirmCommand;
+import com.fliqo.service.dto.request.PhoneVerificationConfirmCommand;
 import com.fliqo.service.dto.request.SignupCommand;
 import com.fliqo.service.dto.response.EmailCheckResult;
+import com.fliqo.service.dto.response.EmailFindConfirmResult;
 import com.fliqo.service.dto.response.SignupResult;
 import com.fliqo.service.validator.MemberPolicyValidator;
 import com.fliqo.util.UuidUtil;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
@@ -107,25 +107,26 @@ public class MemberService {
      */
     private Member createMember(SignupCommand signupCmd) {
         log.info("=== Step 3 시작 ===");
-        Member member = Member.builder()
-                .memberUuid(UuidUtil.newUuid())
-                .email(signupCmd.email())
-                .name(signupCmd.name())
-                .phone(signupCmd.phoneNumber())
-                .role(Role.USER)
-                .status(MemberStatus.ACTIVE)
-                .emailVerified(false)
-                .phoneVerified(false)
-                .ownerVerified(false)
-                .onboardingStep((short) 0)
-                .locale("ko-KR")
-                .build();
+        Member member =
+                Member.builder()
+                        .memberUuid(UuidUtil.newUuid())
+                        .email(signupCmd.email())
+                        .name(signupCmd.name())
+                        .phone(signupCmd.phoneNumber())
+                        .role(Role.USER)
+                        .status(MemberStatus.ACTIVE)
+                        .emailVerified(false)
+                        .phoneVerified(false)
+                        .ownerVerified(false)
+                        .onboardingStep((short) 0)
+                        .locale("ko-KR")
+                        .build();
 
         log.info("Member 객체 생성 완료, 저장 시작...");
         Member savedMember = memberRepository.save(member);
         log.info("save() 호출 완료, ID: {}", savedMember.getId());
 
-        memberRepository.flush();  // ✅ 추가
+        memberRepository.flush(); // ✅ 추가
         log.info("flush() 완료, ID: {}", savedMember.getId());
 
         return savedMember;
@@ -154,13 +155,14 @@ public class MemberService {
         log.info("Password encoding 완료. 소요시간: {}ms", (endTime - startTime));
 
         log.info("MemberCredential 객체 생성 중...");
-        MemberCredential credential = MemberCredential.builder()
-                .member(member)
-                .passwordHash(hash)
-                .passwordAlgo(PasswordAlgo.BCRYPT)
-                .failedLoginAttempts(0)
-                .passwordChangedAt(LocalDateTime.now())
-                .build();
+        MemberCredential credential =
+                MemberCredential.builder()
+                        .member(member)
+                        .passwordHash(hash)
+                        .passwordAlgo(PasswordAlgo.BCRYPT)
+                        .failedLoginAttempts(0)
+                        .passwordChangedAt(LocalDateTime.now())
+                        .build();
         log.info("MemberCredential 객체 생성 완료");
 
         log.info("DB 저장 시작...");
@@ -258,7 +260,8 @@ public class MemberService {
     }
 
     @Transactional
-    public EmailFindConfirmResult emailFindByPhone(EmailFindConfirmCommand emailFindConfirmCommand) {
+    public EmailFindConfirmResult emailFindByPhone(
+            EmailFindConfirmCommand emailFindConfirmCommand) {
         PhoneVerification phoneVerification =
                 phoneVerificationService.verifyAndGet(
                         PhoneVerificationConfirmCommand.of(
@@ -266,8 +269,9 @@ public class MemberService {
                                 emailFindConfirmCommand.code()));
 
         Member member =
-                memberRepository.findByPhone(phoneVerification.getPhoneNumber())
-                        .orElseThrow(()-> new BadRequestException(ErrorCode.MEMBER_NOT_FOUND));
+                memberRepository
+                        .findByPhone(phoneVerification.getPhoneNumber())
+                        .orElseThrow(() -> new BadRequestException(ErrorCode.MEMBER_NOT_FOUND));
 
         return EmailFindConfirmResult.of(maskEmail(member.getEmail()));
     }

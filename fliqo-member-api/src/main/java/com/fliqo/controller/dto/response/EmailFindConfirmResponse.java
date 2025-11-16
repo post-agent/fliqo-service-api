@@ -7,8 +7,6 @@ public record EmailFindConfirmResponse(String maskedEmail) {
     public EmailFindConfirmResponse {}
 
     public static EmailFindConfirmResponse of(String maskedEmail) {
-        return EmailFindConfirmResponse.builder()
-                .maskedEmail(maskedEmail)
-                .build();
+        return EmailFindConfirmResponse.builder().maskedEmail(maskedEmail).build();
     }
 }

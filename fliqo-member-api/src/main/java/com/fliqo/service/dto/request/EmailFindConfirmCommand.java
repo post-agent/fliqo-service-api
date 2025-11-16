@@ -7,9 +7,6 @@ public record EmailFindConfirmCommand(String verificationId, String code) {
     public EmailFindConfirmCommand {}
 
     public static EmailFindConfirmCommand of(String verificationId, String code) {
-        return EmailFindConfirmCommand.builder()
-                .verificationId(verificationId)
-                .code(code)
-                .build();
+        return EmailFindConfirmCommand.builder().verificationId(verificationId).code(code).build();
     }
 }
