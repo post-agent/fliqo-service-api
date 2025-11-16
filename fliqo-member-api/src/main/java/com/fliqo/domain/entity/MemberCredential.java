@@ -18,7 +18,7 @@ public class MemberCredential {
     @Column(name = "member_id")
     private Long memberId;
 
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @OneToOne(fetch = FetchType.LAZY, optional = false, cascade = CascadeType.PERSIST)
     @MapsId
     @JoinColumn(name = "member_id")
     private Member member;
