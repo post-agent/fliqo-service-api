@@ -51,7 +51,7 @@ public class PhoneVerification {
     @Column(name = "attempts", nullable = false)
     private int attempts;
 
-    @Column(name = "purpose", nullable = false)
+    @Column(name = "purpose")
     private Integer purpose;
 
     /**
