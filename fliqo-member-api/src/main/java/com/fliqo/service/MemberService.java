@@ -56,22 +56,12 @@ public class MemberService {
      */
     @Transactional
     public SignupResult signup(SignupCommand signupCmd) {
-        log.info("Step 1: Validate email");
         validateSignupRequest(signupCmd);
-
-        log.info("Step 2: Verify phone");
         PhoneVerification phoneVerification = verifyPhone(signupCmd);
-
-        log.info("Step 3: Create member");
         Member member = createMember(signupCmd);
-
-        log.info("Step 4: Create credential");
         createCredential(member, signupCmd.rawPassword());
-
-        log.info("Step 5: Consume token");
         phoneVerificationService.consumeToken(phoneVerification);
 
-        log.info("Step 6: Build result");
         return buildSignupResult(member);
     }
 
@@ -106,7 +96,6 @@ public class MemberService {
      * @return 저장된 Member 엔티티
      */
     private Member createMember(SignupCommand signupCmd) {
-        log.info("=== Step 3 시작 ===");
         Member member =
                 Member.builder()
                         .memberUuid(UuidUtil.newUuid())
@@ -122,12 +111,9 @@ public class MemberService {
                         .locale("ko-KR")
                         .build();
 
-        log.info("Member 객체 생성 완료, 저장 시작...");
         Member savedMember = memberRepository.save(member);
-        log.info("save() 호출 완료, ID: {}", savedMember.getId());
 
         memberRepository.flush(); // ✅ 추가
-        log.info("flush() 완료, ID: {}", savedMember.getId());
 
         return savedMember;
     }
@@ -139,22 +125,9 @@ public class MemberService {
      * @param rawPassword 암호화되지 않은 평문 비밀번호
      */
     private void createCredential(Member member, String rawPassword) {
-        log.info("=== Step 4 시작 ===");
-        log.info("Member ID: {}", member.getId());
-        log.info("Member UUID: {}", member.getMemberUuid());
-        log.info("Member Email: {}", member.getEmail());
-
-        if (member.getId() == null) {
-            log.error("❌❌❌ Member ID is NULL! Member was not flushed! ❌❌❌");
-        }
-
-        log.info("Password encoding 시작...");
         long startTime = System.currentTimeMillis();
         String hash = passwordEncoder.encode(rawPassword);
         long endTime = System.currentTimeMillis();
-        log.info("Password encoding 완료. 소요시간: {}ms", (endTime - startTime));
-
-        log.info("MemberCredential 객체 생성 중...");
         MemberCredential credential =
                 MemberCredential.builder()
                         .member(member)
@@ -163,11 +136,7 @@ public class MemberService {
                         .failedLoginAttempts(0)
                         .passwordChangedAt(LocalDateTime.now())
                         .build();
-        log.info("MemberCredential 객체 생성 완료");
-
-        log.info("DB 저장 시작...");
         credentialRepository.save(credential);
-        log.info("DB 저장 완료!");
     }
 
     /**
