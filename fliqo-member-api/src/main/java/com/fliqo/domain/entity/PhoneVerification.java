@@ -51,6 +51,9 @@ public class PhoneVerification {
     @Column(name = "attempts", nullable = false)
     private int attempts;
 
+    @Column(name = "purpose")
+    private Integer purpose;
+
     /**
      * 새로운 휴대폰 인증 엔티티를 생성합니다.
      *
@@ -62,11 +65,13 @@ public class PhoneVerification {
      * @param code 발송할 인증 코드(6자리)
      * @return 생성된 {@link PhoneVerification} 엔티티
      */
-    public static PhoneVerification createNew(String phoneNumber, String code) {
+    public static PhoneVerification createNew(
+            String phoneNumber, String code, PhoneVerificationPurpose purpose) {
         LocalDateTime now = LocalDateTime.now();
         return PhoneVerification.builder()
                 .id(UuidUtil.newUuid())
                 .phoneNumber(phoneNumber)
+                .purpose(purpose.getCode())
                 .code(code)
                 .expiresAt(now.plusMinutes(DEFAULT_EXPIRY_MINUTES))
                 .attempts(0)

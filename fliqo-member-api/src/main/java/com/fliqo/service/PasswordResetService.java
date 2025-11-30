@@ -44,22 +44,27 @@ public class PasswordResetService {
             throw new BadRequestException(ErrorCode.RESET_INVALID_REQUEST);
         }
 
-        PhoneVerificationStartResult result =
+        PhoneVerificationStartResult phoneVerificationStartResult =
                 phoneVerificationService.start(
-                        PhoneVerificationStartCommand.of(passwordResetStartCmd.phoneNumber()));
-        return PasswordResetStartResult.of(result.verificationId(), result.expiresInMinutes());
+                        PhoneVerificationStartCommand.of(
+                                passwordResetStartCmd.phoneNumber(),
+                                passwordResetStartCmd.purpose()));
+        return PasswordResetStartResult.of(
+                phoneVerificationStartResult.verificationId(),
+                phoneVerificationStartResult.expiresInMinutes());
     }
 
     @Transactional
     public PasswordResetVerifyResult verify(PasswordResetVerifyCommand passwordResetVerifyCmd) {
-        PhoneVerificationConfirmResult confirmResult =
+        PhoneVerificationConfirmResult phoneVerificationConfirmResult =
                 phoneVerificationService.confirm(
                         PhoneVerificationConfirmCommand.of(
                                 passwordResetVerifyCmd.verificationId(),
                                 passwordResetVerifyCmd.code()));
 
         PhoneVerification phoneVerification =
-                phoneVerificationService.getByTokenOfThrow(confirmResult.verificationToken());
+                phoneVerificationService.getByTokenOfThrow(
+                        phoneVerificationConfirmResult.verificationToken());
 
         Member member =
                 memberRepository
