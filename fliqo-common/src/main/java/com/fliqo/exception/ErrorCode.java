@@ -46,6 +46,11 @@ public enum ErrorCode {
     RESET_INVALID_REQUEST(HttpStatus.BAD_REQUEST, "RESET_001", "회원 정보를 찾을 수 없습니다."),
     RESET_TOKEN_INVALID(HttpStatus.BAD_REQUEST, "RESET_002", "비밀번호 재설정 토큰이 유효하지 않습니다."),
     RESET_TOKEN_EXPIRED(HttpStatus.BAD_REQUEST, "RESET_003", "비밀번호 재설정 토큰이 만료되었거나 이미 사용되었습니다."),
+
+    AUTH_TOKEN_REQUEST_FAILED(HttpStatus.BAD_REQUEST, "", ""),
+    AUTH_USER_INFO_REQUEST_FAILED(HttpStatus.BAD_REQUEST, "", ""),
+    AUTH_PROVIDER_NOT_CONFIGURED(HttpStatus.BAD_REQUEST, "", ""),
+    AUTH_PROVIDER_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, "", "");
     ;
 
     private final HttpStatus httpStatus;
