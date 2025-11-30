@@ -45,8 +45,12 @@ public class PhoneVerificationService {
             PhoneVerificationStartCommand phoneVerificationStartCmd) {
         // 인증 코드 생성 및 엔터티 생성
         String code = generateCode();
+
         PhoneVerification phoneVerification =
-                PhoneVerification.createNew(phoneVerificationStartCmd.phoneNumber(), code);
+                PhoneVerification.createNew(
+                        phoneVerificationStartCmd.phoneNumber(),
+                        code,
+                        phoneVerificationStartCmd.purpose());
 
         // 저장
         repository.save(phoneVerification);
@@ -65,18 +69,35 @@ public class PhoneVerificationService {
      * <p>세션 존재 여부 및 상태 검증은 {@link PhoneVerifyValidator}가 수행하며, 코드 일치/만료/시도 횟수 검증은 엔터티의 도메인
      * 로직({@link PhoneVerification#verify(String)})이 수행합니다.
      *
-     * @param phoneVerificationConfirmCmd 인증 세션 ID와 사용자 입력 코드를 담은 확인 명령
+     * @param phoneVerificationConfirmCommand 인증 세션 ID와 사용자 입력 코드를 담은 확인 명령
      * @return 검증 토큰을 담은 결과 객체
      */
     @Transactional
     public PhoneVerificationConfirmResult confirm(
-            PhoneVerificationConfirmCommand phoneVerificationConfirmCmd) {
-        PhoneVerification phoneVerification =
-                validator.mustExist(phoneVerificationConfirmCmd.verificationId());
-        phoneVerification.verify(phoneVerificationConfirmCmd.code());
-        repository.save(phoneVerification);
+            PhoneVerificationConfirmCommand phoneVerificationConfirmCommand) {
+        PhoneVerification phoneVerification = verifyAndGet(phoneVerificationConfirmCommand);
 
         return PhoneVerificationConfirmResult.of(phoneVerification.getVerificationToken());
+    }
+
+    /**
+     * 인증 코드를 검증하고 {@link PhoneVerification} 엔터티를 반환합니다.
+     *
+     * <p>주요 흐름은 {@link #confirm(PhoneVerificationConfirmCommand)}와 동일하며, 검증이 성공하면 엔터티를 그대로 돌려줍니다.
+     * 이메일 찾기 등 인증 이후 추가 정보가 필요한 시나리오에서 재사용하기 위한 유틸리티입니다.
+     *
+     * @param phoneVerificationConfirmCommand 인증 세션 ID와 사용자 입력 코드를 담은 확인 명령
+     * @return 검증이 완료된 {@link PhoneVerification}
+     */
+    @Transactional
+    public PhoneVerification verifyAndGet(
+            PhoneVerificationConfirmCommand phoneVerificationConfirmCommand) {
+        PhoneVerification phoneVerification =
+                validator.mustExist(phoneVerificationConfirmCommand.verificationId());
+        phoneVerification.verify(phoneVerificationConfirmCommand.code());
+        repository.save(phoneVerification);
+
+        return phoneVerification;
     }
 
     /**

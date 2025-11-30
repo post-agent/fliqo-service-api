@@ -40,7 +40,9 @@ public class MemberController {
             @Valid @RequestBody PhoneVerifyStartRequest phoneVerifyStartRequest) {
         PhoneVerificationStartResult phoneVerificationStartResult =
                 phoneVerificationService.start(
-                        PhoneVerificationStartCommand.of(phoneVerifyStartRequest.phoneNumber()));
+                        PhoneVerificationStartCommand.of(
+                                phoneVerifyStartRequest.phoneNumber(),
+                                phoneVerifyStartRequest.purpose()));
         return ResponseEntity.ok(
                 CommonResponse.success(
                         PhoneVerifyRequestResponse.of(
@@ -99,11 +101,13 @@ public class MemberController {
 
     @PostMapping("/password/reset/request")
     public ResponseEntity<CommonResponse<PasswordResetStartResult>> requestPasswordReset(
-            @Valid @RequestBody PasswordResetRequest passwordResetRequest) {
+            @Valid @RequestBody PasswordResetStartRequest passwordResetStartRequest) {
         PasswordResetStartResult passwordResetStartResult =
                 passwordResetService.start(
                         PasswordResetStartCommand.of(
-                                passwordResetRequest.email(), passwordResetRequest.phoneNumber()));
+                                passwordResetStartRequest.email(),
+                                passwordResetStartRequest.phoneNumber(),
+                                passwordResetStartRequest.purpose()));
         return ResponseEntity.ok(CommonResponse.success(passwordResetStartResult));
     }
 
@@ -126,5 +130,35 @@ public class MemberController {
                         passwordResetConfirmRequest.resetToken(),
                         passwordResetConfirmRequest.newPassword()));
         return ResponseEntity.ok(CommonResponse.success("새로운 비밀번호로 변경되었습니다."));
+    }
+
+    @PostMapping("email/find/request")
+    public ResponseEntity<CommonResponse<PhoneVerifyRequestResponse>> emailFindRequest(
+            @Valid @RequestBody PhoneVerifyStartRequest phoneVerifyStartRequest) {
+        PhoneVerificationStartResult phoneVerificationStartResult =
+                phoneVerificationService.start(
+                        PhoneVerificationStartCommand.of(
+                                phoneVerifyStartRequest.phoneNumber(),
+                                phoneVerifyStartRequest.purpose()));
+
+        return ResponseEntity.ok(
+                CommonResponse.success(
+                        PhoneVerifyRequestResponse.of(
+                                phoneVerificationStartResult.verificationId(),
+                                phoneVerificationStartResult.expiresInMinutes())));
+    }
+
+    @PostMapping("email/find/confirm")
+    public ResponseEntity<CommonResponse<EmailFindConfirmResponse>> emailFindConfirm(
+            @Valid @RequestBody EmailFindConfirmRequest emailFindVerifyRequest) {
+        EmailFindConfirmResult emailFindConfirmResult =
+                memberService.emailFindByPhone(
+                        EmailFindConfirmCommand.of(
+                                emailFindVerifyRequest.verificationId(),
+                                emailFindVerifyRequest.code()));
+
+        return ResponseEntity.ok(
+                CommonResponse.success(
+                        EmailFindConfirmResponse.of(emailFindConfirmResult.maskedEmail())));
     }
 }

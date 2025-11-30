@@ -1,5 +1,6 @@
 package com.fliqo.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -8,22 +9,26 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.fliqo.config.AuthProperties;
 import com.fliqo.controller.dto.response.TokenResponseDto;
-import com.fliqo.domain.entity.Member;
-import com.fliqo.domain.entity.MemberCredential;
-import com.fliqo.domain.entity.PhoneVerification;
+import com.fliqo.domain.entity.*;
 import com.fliqo.domain.repository.MemberCredentialRepository;
 import com.fliqo.domain.repository.MemberRepository;
+import com.fliqo.exception.BadRequestException;
 import com.fliqo.exception.ErrorCode;
 import com.fliqo.exception.UnauthorizedException;
 import com.fliqo.service.dto.request.EmailCheckCommand;
+import com.fliqo.service.dto.request.EmailFindConfirmCommand;
+import com.fliqo.service.dto.request.PhoneVerificationConfirmCommand;
 import com.fliqo.service.dto.request.SignupCommand;
 import com.fliqo.service.dto.response.EmailCheckResult;
+import com.fliqo.service.dto.response.EmailFindConfirmResult;
 import com.fliqo.service.dto.response.SignupResult;
 import com.fliqo.service.validator.MemberPolicyValidator;
 import com.fliqo.util.UuidUtil;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MemberService {
@@ -97,8 +102,20 @@ public class MemberService {
                         .email(signupCmd.email())
                         .name(signupCmd.name())
                         .phone(signupCmd.phoneNumber())
+                        .role(Role.USER)
+                        .status(MemberStatus.ACTIVE)
+                        .emailVerified(false)
+                        .phoneVerified(false)
+                        .ownerVerified(false)
+                        .onboardingStep((short) 0)
+                        .locale("ko-KR")
                         .build();
-        return memberRepository.save(member);
+
+        Member savedMember = memberRepository.save(member);
+
+        memberRepository.flush(); // ✅ 추가
+
+        return savedMember;
     }
 
     /**
@@ -108,8 +125,17 @@ public class MemberService {
      * @param rawPassword 암호화되지 않은 평문 비밀번호
      */
     private void createCredential(Member member, String rawPassword) {
+        long startTime = System.currentTimeMillis();
         String hash = passwordEncoder.encode(rawPassword);
-        MemberCredential credential = MemberCredential.createNew(member, hash);
+        long endTime = System.currentTimeMillis();
+        MemberCredential credential =
+                MemberCredential.builder()
+                        .member(member)
+                        .passwordHash(hash)
+                        .passwordAlgo(PasswordAlgo.BCRYPT)
+                        .failedLoginAttempts(0)
+                        .passwordChangedAt(LocalDateTime.now())
+                        .build();
         credentialRepository.save(credential);
     }
 
@@ -200,5 +226,39 @@ public class MemberService {
      */
     private long calculateExpirationSeconds() {
         return authProperties.accessMin() * 60;
+    }
+
+    @Transactional
+    public EmailFindConfirmResult emailFindByPhone(
+            EmailFindConfirmCommand emailFindConfirmCommand) {
+        PhoneVerification phoneVerification =
+                phoneVerificationService.verifyAndGet(
+                        PhoneVerificationConfirmCommand.of(
+                                emailFindConfirmCommand.verificationId(),
+                                emailFindConfirmCommand.code()));
+
+        Member member =
+                memberRepository
+                        .findByPhone(phoneVerification.getPhoneNumber())
+                        .orElseThrow(() -> new BadRequestException(ErrorCode.MEMBER_NOT_FOUND));
+
+        return EmailFindConfirmResult.of(maskEmail(member.getEmail()));
+    }
+
+    private String maskEmail(String email) {
+        int atIndex = email.indexOf('@');
+        if (atIndex <= 0) {
+            return "**";
+        }
+
+        String localPart = email.substring(0, atIndex);
+        String domainPart = email.substring(atIndex + 1);
+
+        if (localPart.length() <= 2) {
+            return "**@" + domainPart;
+        }
+
+        String visiblePrefix = localPart.substring(0, 2);
+        return visiblePrefix + "**@" + domainPart;
     }
 }
