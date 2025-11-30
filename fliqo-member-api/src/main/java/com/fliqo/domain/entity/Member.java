@@ -13,8 +13,9 @@ import lombok.*;
         name = "tb_member",
         indexes = {
             @Index(name = "ux_member_uuid", columnList = "member_uuid", unique = true),
-            @Index(name = "ux_member_email", columnList = "email", unique = true),
-            @Index(name = "ix_member_phone", columnList = "phone")
+            @Index(name = "ux_member_email", columnList = "email"),
+            @Index(name = "ix_member_phone", columnList = "phone"),
+            @Index(name = "ux_provider_id", columnList = "provider, provider_id", unique = true)
         })
 @Getter
 @Builder
@@ -31,7 +32,7 @@ public class Member {
 
     @Email
     @Size(max = 320)
-    @Column(name = "email", nullable = false, length = 320, unique = true)
+    @Column(name = "email", nullable = false, length = 320)
     private String email;
 
     @Size(max = 100)
@@ -43,8 +44,15 @@ public class Member {
     private String nickname;
 
     @Size(max = 20)
-    @Column(name = "phone", nullable = false, length = 20)
+    @Column(name = "phone", length = 20)
     private String phone;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "provider", length = 20)
+    private AuthProvider provider;
+
+    @Column(name = "provider_id", length = 100)
+    private String providerId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false, length = 20)
@@ -88,6 +96,7 @@ public class Member {
         }
         if (this.role == null) this.role = Role.USER;
         if (this.status == null) this.status = MemberStatus.ACTIVE;
+        if (this.provider == null) this.provider = AuthProvider.LOCAL;
         // 기본값들(스키마의 FALSE/ko-KR 등) 초기화
         // locale 기본값 필요 시:
         if (this.locale == null) this.locale = "ko-KR";
