@@ -24,11 +24,12 @@ public class SecurityConfig {
                                                 HttpMethod.POST,
                                                 "/api/member/email-check",
                                                 "/api/member/phone/**",
+                                                "/api/auth/**",
                                                 "/api/member/signup",
                                                 "/api/member/login",
                                                 "/api/member/password/reset/**")
                                         .permitAll()
-                                        .requestMatchers(HttpMethod.GET, "/api/member/me")
+                                        .requestMatchers(HttpMethod.GET, "/api/auth/**")
                                         .permitAll()
                                         .requestMatchers("/error")
                                         .permitAll()
