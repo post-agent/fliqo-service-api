@@ -42,6 +42,11 @@ public enum ErrorCode {
     PHONE_VERIFY_PHONE_MISMATCH(
             HttpStatus.BAD_REQUEST, "PHONE_007", "인증된 휴대폰 번호와 제출된 번호가 일치하지 않습니다."),
 
+    // ===== Terms Agreement (약관 동의) =====
+    TERMS_CODE_NOT_FOUND(HttpStatus.BAD_REQUEST, "TERMS_001", "존재하지 않는 약관 코드입니다."),
+    TERMS_REQUIRED_NOT_AGREED(HttpStatus.BAD_REQUEST, "TERMS_002", "필수 약관에 동의하지 않았습니다."),
+    TERMS_MISSING_AGREEMENTS(HttpStatus.BAD_REQUEST, "TERMS_003", "약관 동의 정보가 누락되었습니다."),
+
     // ===== password reset =====
     RESET_INVALID_REQUEST(HttpStatus.BAD_REQUEST, "RESET_001", "회원 정보를 찾을 수 없습니다."),
     RESET_TOKEN_INVALID(HttpStatus.BAD_REQUEST, "RESET_002", "비밀번호 재설정 토큰이 유효하지 않습니다."),

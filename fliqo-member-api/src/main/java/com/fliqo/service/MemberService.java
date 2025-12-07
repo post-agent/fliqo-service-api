@@ -274,18 +274,8 @@ public class MemberService {
     private void saveTermsAgreements(Member member, SignupCommand signupCmd) {
         List<TermsAgreementCommand> agreements = signupCmd.agreements();
         if (agreements == null || agreements.isEmpty()) {
-            return; // 약관 동의 정보가 없으면 아무 것도 하지 않음
+            throw new BadRequestException(ErrorCode.TERMS_MISSING_AGREEMENTS);
         }
-
-        // ✅ 개발 단계: tb_terms 에 약관 데이터가 하나도 없으면 스킵
-        /*
-        if (termsRepository.count() == 0) {
-            log.warn(
-                    "회원가입 약관 저장을 스킵합니다. tb_terms 에 등록된 약관 데이터가 없습니다. memberId={}",
-                    member.getId());
-            return;
-        }
-         */
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -295,16 +285,8 @@ public class MemberService {
             Terms latest =
                     termsRepository
                             .findTopByCodeOrderByVersionDesc(agreementCommand.code())
-                            .orElse(null);
-
-            // ✅ 해당 code 에 대한 약관이 아직 등록되지 않은 경우: 스킵 (개발 편의용)
-            if (latest == null) {
-                log.warn(
-                        "약관 동의 저장을 스킵합니다. code 에 해당하는 약관이 없습니다. code={}, memberId={}",
-                        agreementCommand.code(),
-                        member.getId());
-                continue;
-            }
+                            .orElseThrow(()->
+                                    new BadRequestException(ErrorCode.TERMS_CODE_NOT_FOUND));
 
             // 2) 필수 약관인데 동의하지 않으면 예외
             //    (tb_terms 에 데이터가 존재하는 환경에서만 실제로 강제됨)
