@@ -1,5 +1,7 @@
 package com.fliqo.service.dto.request;
 
+import java.util.List;
+
 import lombok.Builder;
 
 @Builder
@@ -8,4 +10,5 @@ public record SignupCommand(
         String rawPassword,
         String name,
         String phoneNumber,
-        String phoneVerificationToken) {}
+        String phoneVerificationToken,
+        List<TermsAgreementCommand> agreements) {}
