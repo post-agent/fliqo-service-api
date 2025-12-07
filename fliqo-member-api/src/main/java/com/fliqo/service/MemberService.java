@@ -12,13 +12,12 @@ import com.fliqo.controller.dto.response.TokenResponseDto;
 import com.fliqo.domain.entity.*;
 import com.fliqo.domain.repository.MemberCredentialRepository;
 import com.fliqo.domain.repository.MemberRepository;
+import com.fliqo.domain.repository.MemberTermsAgreementRepository;
+import com.fliqo.domain.repository.TermsRepository;
 import com.fliqo.exception.BadRequestException;
 import com.fliqo.exception.ErrorCode;
 import com.fliqo.exception.UnauthorizedException;
-import com.fliqo.service.dto.request.EmailCheckCommand;
-import com.fliqo.service.dto.request.EmailFindConfirmCommand;
-import com.fliqo.service.dto.request.PhoneVerificationConfirmCommand;
-import com.fliqo.service.dto.request.SignupCommand;
+import com.fliqo.service.dto.request.*;
 import com.fliqo.service.dto.response.EmailCheckResult;
 import com.fliqo.service.dto.response.EmailFindConfirmResult;
 import com.fliqo.service.dto.response.SignupResult;
@@ -39,6 +38,8 @@ public class MemberService {
     private final MemberPolicyValidator memberPolicyValidator;
     private final JwtService jwtService;
     private final AuthProperties authProperties;
+    private final TermsRepository termsRepository;
+    private final MemberTermsAgreementRepository memberTermsAgreementRepository;
 
     @Transactional(readOnly = true)
     public EmailCheckResult checkEmail(EmailCheckCommand emailCheckCmd) {
@@ -60,6 +61,8 @@ public class MemberService {
         PhoneVerification phoneVerification = verifyPhone(signupCmd);
         Member member = createMember(signupCmd);
         createCredential(member, signupCmd.rawPassword());
+
+        saveTermsAgreements(member, signupCmd);
         phoneVerificationService.consumeToken(phoneVerification);
 
         return buildSignupResult(member);
@@ -104,8 +107,8 @@ public class MemberService {
                         .phone(signupCmd.phoneNumber())
                         .role(Role.USER)
                         .status(MemberStatus.ACTIVE)
-                        .emailVerified(false)
-                        .phoneVerified(false)
+                        .emailVerified(true)
+                        .phoneVerified(true)
                         .ownerVerified(false)
                         .onboardingStep((short) 0)
                         .locale("ko-KR")
@@ -260,5 +263,68 @@ public class MemberService {
 
         String visiblePrefix = localPart.substring(0, 2);
         return visiblePrefix + "**@" + domainPart;
+    }
+
+    /**
+     * 회원가입 시 약관 동의 이력을 저장합니다.
+     *
+     * @param member 생성된 회원
+     * @param signupCmd 회원가입 커맨드 (약관 동의 정보 포함)
+     */
+    private void saveTermsAgreements(Member member, SignupCommand signupCmd) {
+        List<TermsAgreementCommand> agreements = signupCmd.agreements();
+        if (agreements == null || agreements.isEmpty()) {
+            return; // 약관 동의 정보가 없으면 아무 것도 하지 않음
+        }
+
+        // ✅ 개발 단계: tb_terms 에 약관 데이터가 하나도 없으면 스킵
+        /*
+        if (termsRepository.count() == 0) {
+            log.warn(
+                    "회원가입 약관 저장을 스킵합니다. tb_terms 에 등록된 약관 데이터가 없습니다. memberId={}",
+                    member.getId());
+            return;
+        }
+         */
+
+        LocalDateTime now = LocalDateTime.now();
+
+        for (TermsAgreementCommand agreementCommand : agreements) {
+
+            // 1) code 기준 최신 약관 조회
+            Terms latest =
+                    termsRepository
+                            .findTopByCodeOrderByVersionDesc(agreementCommand.code())
+                            .orElse(null);
+
+            // ✅ 해당 code 에 대한 약관이 아직 등록되지 않은 경우: 스킵 (개발 편의용)
+            if (latest == null) {
+                log.warn(
+                        "약관 동의 저장을 스킵합니다. code 에 해당하는 약관이 없습니다. code={}, memberId={}",
+                        agreementCommand.code(),
+                        member.getId());
+                continue;
+            }
+
+            // 2) 필수 약관인데 동의하지 않으면 예외
+            //    (tb_terms 에 데이터가 존재하는 환경에서만 실제로 강제됨)
+            if (Boolean.TRUE.equals(latest.getRequired()) && !agreementCommand.agreed()) {
+                throw new BadRequestException(ErrorCode.TERMS_REQUIRED_NOT_AGREED);
+            }
+
+            // 3) 동의 이력 엔티티 생성
+            MemberTermsAgreement agreement =
+                    MemberTermsAgreement.builder()
+                            .member(member)
+                            .terms(latest)
+                            .agreedVersion(latest.getVersion())
+                            .agreed(agreementCommand.agreed())
+                            .agreedAt(now)
+                            // ip / userAgent 는 지금은 null, 나중에 컨트롤러에서 받아서 넣으면 됨
+                            .build();
+
+            // 4) 저장
+            memberTermsAgreementRepository.save(agreement);
+        }
     }
 }
