@@ -1,8 +1,9 @@
 package com.fliqo.domain.entity;
 
+import org.hibernate.annotations.Immutable;
+
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.Immutable;
 
 @Entity
 @Table(name = "tb_terms")

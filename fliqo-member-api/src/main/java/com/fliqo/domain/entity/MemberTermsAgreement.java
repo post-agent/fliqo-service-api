@@ -1,21 +1,18 @@
 package com.fliqo.domain.entity;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.*;
 import lombok.*;
-
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 
 @Entity
 @Table(
         name = "tb_member_terms_agreement",
         uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "uk_member_terms_version",
-                        columnNames = {"member_id", "terms_id", "agreed_version"}
-                )
-        }
-)
+            @UniqueConstraint(
+                    name = "uk_member_terms_version",
+                    columnNames = {"member_id", "terms_id", "agreed_version"})
+        })
 @Getter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

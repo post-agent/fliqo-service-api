@@ -285,8 +285,8 @@ public class MemberService {
             Terms latest =
                     termsRepository
                             .findTopByCodeOrderByVersionDesc(agreementCommand.code())
-                            .orElseThrow(()->
-                                    new BadRequestException(ErrorCode.TERMS_CODE_NOT_FOUND));
+                            .orElseThrow(
+                                    () -> new BadRequestException(ErrorCode.TERMS_CODE_NOT_FOUND));
 
             // 2) 필수 약관인데 동의하지 않으면 예외
             //    (tb_terms 에 데이터가 존재하는 환경에서만 실제로 강제됨)
