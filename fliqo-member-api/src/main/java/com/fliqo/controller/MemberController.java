@@ -71,15 +71,7 @@ public class MemberController {
         memberPolicyValidator.validateOrThrow(
                 signupRequest.password(), signupRequest.passwordConfirm());
 
-        SignupResult signupResult =
-                memberService.signup(
-                        SignupCommand.builder()
-                                .email(signupRequest.email())
-                                .rawPassword(signupRequest.password())
-                                .name(signupRequest.name())
-                                .phoneNumber(signupRequest.phoneNumber())
-                                .phoneVerificationToken(signupRequest.phoneVerificationToken())
-                                .build());
+        SignupResult signupResult = memberService.signup(signupRequest.toCommand());
 
         return ResponseEntity.ok(
                 CommonResponse.success(
