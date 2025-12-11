@@ -31,6 +31,7 @@ public enum ErrorCode {
             HttpStatus.BAD_REQUEST, "MEMBER_002", "비밀번호는 8자 이상이며 영문, 숫자, 특수문자를 모두 포함해야 합니다."),
     PASSWORD_MISMATCH(HttpStatus.BAD_REQUEST, "MEMBER_003", "비밀번호와 비밀번호 확인이 일치하지 않습니다."),
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER_004", "회원을 찾을 수 없습니다."),
+    MEMBER_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "MEMBER_005", "이미 가입된 휴대폰 번호입니다."),
 
     // ===== Phone Verification (전화번호 인증) =====
     PHONE_VERIFY_INVALID_REQUEST(HttpStatus.BAD_REQUEST, "PHONE_001", "유효하지 않은 인증 요청입니다."),
