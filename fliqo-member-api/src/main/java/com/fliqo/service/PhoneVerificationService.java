@@ -2,17 +2,17 @@ package com.fliqo.service;
 
 import java.security.SecureRandom;
 
-import com.fliqo.domain.entity.PhoneVerificationPurpose;
-import com.fliqo.service.validator.MemberPolicyValidator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fliqo.domain.entity.PhoneVerification;
+import com.fliqo.domain.entity.PhoneVerificationPurpose;
 import com.fliqo.domain.repository.PhoneVerificationRepository;
 import com.fliqo.service.dto.request.PhoneVerificationConfirmCommand;
 import com.fliqo.service.dto.request.PhoneVerificationStartCommand;
 import com.fliqo.service.dto.response.PhoneVerificationConfirmResult;
 import com.fliqo.service.dto.response.PhoneVerificationStartResult;
+import com.fliqo.service.validator.MemberPolicyValidator;
 import com.fliqo.service.validator.PhoneVerifyValidator;
 
 import lombok.RequiredArgsConstructor;
@@ -132,15 +132,17 @@ public class PhoneVerificationService {
         phoneVerification.consume();
         repository.save(phoneVerification);
     }
+
     /**
      * 인증 목적에 따라 휴대폰 번호의 사용 가능 여부 및 가입 여부를 검증합니다.
      *
      * <ul>
-     *     <li>SIGNUP: 이미 가입된 번호면 예외</li>
-     *     <li>PASSWORD_RESET, FIND_EMAIL: 가입된 번호가 아니면 예외</li>
+     *   <li>SIGNUP: 이미 가입된 번호면 예외
+     *   <li>PASSWORD_RESET, FIND_EMAIL: 가입된 번호가 아니면 예외
      * </ul>
      */
-    private void validatePhonePolicyByPurpose(String phoneNumber, PhoneVerificationPurpose purpose) {
+    private void validatePhonePolicyByPurpose(
+            String phoneNumber, PhoneVerificationPurpose purpose) {
         switch (purpose) {
             case SIGNUP -> {
                 memberPolicyValidator.ensurePhoneAvailableForSignup(phoneNumber);
