@@ -6,11 +6,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fliqo.domain.entity.PhoneVerification;
+import com.fliqo.domain.entity.PhoneVerificationPurpose;
 import com.fliqo.domain.repository.PhoneVerificationRepository;
 import com.fliqo.service.dto.request.PhoneVerificationConfirmCommand;
 import com.fliqo.service.dto.request.PhoneVerificationStartCommand;
 import com.fliqo.service.dto.response.PhoneVerificationConfirmResult;
 import com.fliqo.service.dto.response.PhoneVerificationStartResult;
+import com.fliqo.service.validator.MemberPolicyValidator;
 import com.fliqo.service.validator.PhoneVerifyValidator;
 
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,7 @@ public class PhoneVerificationService {
     private final PhoneVerificationRepository repository;
     private final SmsSender smsSender;
     private final PhoneVerifyValidator validator;
+    private final MemberPolicyValidator memberPolicyValidator;
 
     private static final int MAX_ATTEMPTS = 5;
 
@@ -43,6 +46,12 @@ public class PhoneVerificationService {
     @Transactional
     public PhoneVerificationStartResult start(
             PhoneVerificationStartCommand phoneVerificationStartCmd) {
+
+        String phoneNumber = phoneVerificationStartCmd.phoneNumber();
+        PhoneVerificationPurpose purpose = phoneVerificationStartCmd.purpose();
+
+        validatePhonePolicyByPurpose(phoneNumber, purpose);
+
         // 인증 코드 생성 및 엔터티 생성
         String code = generateCode();
 
@@ -122,5 +131,25 @@ public class PhoneVerificationService {
     public void consumeToken(PhoneVerification phoneVerification) {
         phoneVerification.consume();
         repository.save(phoneVerification);
+    }
+
+    /**
+     * 인증 목적에 따라 휴대폰 번호의 사용 가능 여부 및 가입 여부를 검증합니다.
+     *
+     * <ul>
+     *   <li>SIGNUP: 이미 가입된 번호면 예외
+     *   <li>PASSWORD_RESET, FIND_EMAIL: 가입된 번호가 아니면 예외
+     * </ul>
+     */
+    private void validatePhonePolicyByPurpose(
+            String phoneNumber, PhoneVerificationPurpose purpose) {
+        switch (purpose) {
+            case SIGNUP -> {
+                memberPolicyValidator.ensurePhoneAvailableForSignup(phoneNumber);
+            }
+            case FIND_EMAIL, PASSWORD_RESET -> {
+                memberPolicyValidator.ensurePhoneAlreadyRegistered(phoneNumber);
+            }
+        }
     }
 }

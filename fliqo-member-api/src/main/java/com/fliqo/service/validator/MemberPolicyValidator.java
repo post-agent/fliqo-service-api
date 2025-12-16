@@ -31,6 +31,34 @@ public class MemberPolicyValidator {
         }
     }
 
+    /**
+     * 회원가입 시 사용할 휴대폰 번호가 이미 등록되어 있지 않은지 검증합니다.
+     *
+     * <p>이미 동일한 휴대폰 번호를 가진 회원이 존재하면 {@link ErrorCode#MEMBER_ALREADY_EXISTS} 예외를 발생시켜 인증 절차를 중단합니다.
+     *
+     * @param phoneNumber 중복 여부를 확인할 휴대폰 번호
+     * @throws BadRequestException 이미 가입된 번호인 경우
+     */
+    public void ensurePhoneAvailableForSignup(String phoneNumber) {
+        if (memberRepository.existsByPhone(phoneNumber)) {
+            throw new BadRequestException(ErrorCode.MEMBER_ALREADY_EXISTS);
+        }
+    }
+
+    /**
+     * 비밀번호 찾기/이메일 찾기 등, 휴대폰 번호가 기등록 회원이어야 하는 경우 사용됩니다.
+     *
+     * <p>해당 번호로 가입된 회원이 없으면 {@link ErrorCode#MEMBER_NOT_FOUND} 예외를 발생시킵니다.
+     *
+     * @param phoneNumber 가입 여부를 확인할 휴대폰 번호
+     * @throws BadRequestException 가입된 회원이 아닌 경우
+     */
+    public void ensurePhoneAlreadyRegistered(String phoneNumber) {
+        if (!memberRepository.existsByPhone(phoneNumber)) {
+            throw new BadRequestException(ErrorCode.MEMBER_NOT_FOUND);
+        }
+    }
+
     // 8자 이상, 영문+숫자+특수문자 각각 최소 1개
     private static final Pattern PWD =
             Pattern.compile(

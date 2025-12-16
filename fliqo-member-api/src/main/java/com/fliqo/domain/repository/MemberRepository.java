@@ -10,6 +10,8 @@ import com.fliqo.domain.entity.Member;
 public interface MemberRepository extends JpaRepository<Member, Long> {
     boolean existsByEmail(String email);
 
+    boolean existsByPhone(String phoneNumber);
+
     Optional<Member> findByEmail(String email);
 
     Optional<Member> findByPhone(String phone);
